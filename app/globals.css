@@ -3,25 +3,106 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --gold: #C9A961;
+  --gold-light: #E0C97A;
+  --gold-dark: #A8893F;
+  --bg-dark: #0A0A0A;
+  --bg-card: #111111;
+  --bg-hover: #1A1A1A;
+  --border-gold: rgba(201, 169, 97, 0.25);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --text-primary: #F5F0E8;
+  --text-secondary: rgba(245, 240, 232, 0.6);
+  --text-muted: rgba(245, 240, 232, 0.35);
+  --sidebar-width: 240px;
+
+  /* shadcn/ui 토큰 */
+  --background: 0 0% 4%;
+  --foreground: 40 30% 95%;
+  --card: 0 0% 7%;
+  --card-foreground: 40 30% 95%;
+  --popover: 0 0% 7%;
+  --popover-foreground: 40 30% 95%;
+  --primary: 40 55% 58%;
+  --primary-foreground: 0 0% 4%;
+  --secondary: 0 0% 10%;
+  --secondary-foreground: 40 30% 95%;
+  --muted: 0 0% 12%;
+  --muted-foreground: 40 20% 50%;
+  --accent: 0 0% 10%;
+  --accent-foreground: 40 30% 95%;
+  --destructive: 0 63% 50%;
+  --destructive-foreground: 40 30% 95%;
+  --border: 40 30% 20%;
+  --input: 40 20% 15%;
+  --ring: 40 55% 58%;
+  --radius: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* 럭셔리 골드 버튼 */
+.btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 50%, var(--gold) 100%);
+  color: #0A0A0A;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  transition: opacity 0.2s, transform 0.1s;
+}
+.btn-gold:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* 골드 테두리 카드 */
+.card-luxury {
+  background: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+}
+
+/* 입력 필드 */
+.input-luxury {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+.input-luxury:focus {
+  border-color: var(--gold);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(201,169,97,0.15);
+}
+.input-luxury::placeholder {
+  color: var(--text-muted);
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 3px; }
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  .text-balance { text-wrap: balance; }
+  .text-gold { color: var(--gold); }
+  .bg-card-luxury { background: var(--bg-card); }
+  .border-gold { border-color: var(--border-gold); }
 }
