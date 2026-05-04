@@ -35,17 +35,45 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { customer_id, menu_id, start_at, end_at } = body
+  const { menu_id, start_at, end_at } = body
 
-  if (!customer_id || !menu_id || !start_at || !end_at) {
+  if (!menu_id || !start_at || !end_at) {
     return NextResponse.json({ error: '필수 항목이 누락되었습니다.' }, { status: 400 })
   }
 
+  // 관리자 이메일로 owner profile 조회 (service role 사용)
+  const adminEmail = process.env.ADMIN_EMAIL
+  const { data: authList } = await serviceSupabase.auth.admin.listUsers()
+  const adminUser = authList?.users?.find(u => u.email === adminEmail)
+  if (!adminUser) return NextResponse.json({ error: '관리자 설정이 필요합니다.' }, { status: 500 })
+
+  const ownerId = adminUser.id
+
+  // 고객 레코드 확인 또는 생성 (service role로 RLS 우회)
+  let { data: customerRecord } = await serviceSupabase
+    .from('lash_salon_customers')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!customerRecord) {
+    const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
+    const { data: newCustomer, error: customerError } = await serviceSupabase
+      .from('lash_salon_customers')
+      .insert({ owner_id: ownerId, name: userName, user_id: user.id })
+      .select('id')
+      .single()
+    if (customerError) return NextResponse.json({ error: '고객 정보를 생성할 수 없습니다.' }, { status: 500 })
+    customerRecord = newCustomer
+  }
+
+  const customer_id = customerRecord.id
+
   // 사장님 프로필 (GCal 토큰) 조회
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceSupabase
     .from('lash_salon_owner_profiles')
     .select('gcal_access_token, gcal_refresh_token, gcal_token_expires_at, google_calendar_id')
-    .eq('id', user.id)
+    .eq('id', ownerId)
     .single()
 
   // GCal 연동된 경우 freebusy 검증
@@ -64,7 +92,7 @@ export async function POST(request: NextRequest) {
       await serviceSupabase.from('lash_salon_owner_profiles').update({
         gcal_access_token: newTokens.access_token,
         gcal_token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
-      }).eq('id', user.id)
+      }).eq('id', ownerId)
     }
 
     if (!available) {
@@ -76,7 +104,7 @@ export async function POST(request: NextRequest) {
   const { data: booking, error: insertError } = await serviceSupabase
     .from('lash_salon_bookings')
     .insert({
-      owner_id: user.id,
+      owner_id: ownerId,
       customer_id,
       menu_id,
       start_at,
@@ -114,7 +142,7 @@ export async function POST(request: NextRequest) {
         await serviceSupabase.from('lash_salon_owner_profiles').update({
           gcal_access_token: newTokens.access_token,
           gcal_token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
-        }).eq('id', user.id)
+        }).eq('id', ownerId)
       }
     } catch {
       // GCal 실패는 예약 자체를 막지 않음 (이미 DB에 저장됨)

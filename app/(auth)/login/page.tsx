@@ -33,8 +33,8 @@ function LoginForm() {
       return
     }
 
-    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL
-    const dest = redirectTo ?? (data.user?.email === adminEmail ? '/admin' : '/customer')
+    const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? ''
+    const dest = redirectTo ?? (adminEmail && data.user?.email === adminEmail ? '/admin' : '/customer')
     router.push(dest)
     router.refresh()
   }
