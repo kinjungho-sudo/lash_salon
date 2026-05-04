@@ -1,157 +1,875 @@
-import Image from 'next/image'
+'use client'
+
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import BookingButton from '@/components/landing/booking-button'
+import { useRouter } from 'next/navigation'
+import {
+  FlourishRule,
+  EyeEditorial,
+  LashStudyA,
+  LashStudyB,
+  LashStudyC,
+  MapArt,
+} from '@/components/landing/mute-ornaments'
 
-export default function LandingPage() {
+// ── 공통 CSS 변수 shorthand ──────────────────────────────────────────
+const V = {
+  bg: 'var(--mute-bg)',
+  bgSoft: 'var(--mute-bg-soft)',
+  bgPaper: 'var(--mute-bg-paper)',
+  ink: 'var(--mute-ink)',
+  ink2: 'var(--mute-ink-2)',
+  ink3: 'var(--mute-ink-3)',
+  line: 'var(--mute-line)',
+  lineSoft: 'var(--mute-line-soft)',
+  gold: 'var(--mute-gold)',
+  serif: 'var(--mute-serif)',
+  serifItalic: 'var(--mute-serif-italic)',
+  display: 'var(--mute-display)',
+  kr: 'var(--mute-kr)',
+  sans: 'var(--mute-sans)',
+}
+
+// ────────────────────────────────────────────────────────────────────
+// NAV
+// ────────────────────────────────────────────────────────────────────
+function Nav({ onLogin }: { onLogin: () => void }) {
   return (
-    <div className="min-h-screen" style={{ background: '#FAFAF8' }}>
-      {/* 헤더 */}
-      <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 h-16"
-        style={{ background: 'rgba(250,250,248,0.94)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(28,28,28,0.07)' }}>
-        <Image src="/Logo.png" alt="MUTE EYELASH SALON" width={110} height={38} className="h-8 w-auto object-contain" />
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="h-9 px-5 rounded-lg text-sm font-medium flex items-center transition-colors"
-            style={{ color: '#2D4A3E', border: '1.5px solid rgba(45,74,62,0.2)' }}>
-            로그인
-          </Link>
-          <BookingButton />
+    <nav style={{
+      position: 'sticky', top: 0, zIndex: 50,
+      background: 'rgba(233,226,210,0.85)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: `1px solid ${V.lineSoft}`,
+    }}>
+      <div style={{
+        maxWidth: 1440, margin: '0 auto', padding: '18px 56px',
+        display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 32,
+      }}>
+        {/* 좌측 메뉴 */}
+        <div style={{ display: 'flex', gap: 36, alignItems: 'center' }}>
+          {['About', 'Menu', 'Booking', 'Journal'].map((label) => (
+            <a
+              key={label}
+              href={`#${label.toLowerCase()}`}
+              style={{
+                fontFamily: V.sans, fontSize: 11, letterSpacing: '0.28em',
+                textTransform: 'uppercase', color: V.ink2,
+                textDecoration: 'none', padding: '4px 0',
+              }}
+            >{label}</a>
+          ))}
         </div>
-      </header>
+        {/* 브랜드 */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontFamily: V.display, fontSize: 22, letterSpacing: '0.2em', color: V.ink }}>MUTE</div>
+          <div style={{ fontFamily: V.sans, fontSize: 9, letterSpacing: '0.4em', color: V.ink3, marginTop: 2, textTransform: 'uppercase' }}>Eyelash · Est. 2023</div>
+        </div>
+        {/* 우측 메뉴 */}
+        <div style={{ display: 'flex', gap: 36, alignItems: 'center', justifyContent: 'flex-end' }}>
+          {['Location', 'Contact'].map((label) => (
+            <a
+              key={label}
+              href={`#${label.toLowerCase()}`}
+              style={{
+                fontFamily: V.sans, fontSize: 11, letterSpacing: '0.28em',
+                textTransform: 'uppercase', color: V.ink2,
+                textDecoration: 'none', padding: '4px 0',
+              }}
+            >{label}</a>
+          ))}
+          <button
+            onClick={onLogin}
+            aria-label="login"
+            style={{
+              width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              border: `1px solid ${V.line}`, background: 'transparent', color: V.ink, borderRadius: '50%',
+              cursor: 'pointer', transition: 'all 200ms ease',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+  )
+}
 
-      {/* 히어로 */}
-      <section className="pt-16 min-h-screen flex items-center" style={{ background: 'linear-gradient(160deg, #FAFAF8 0%, #F0EDE6 100%)' }}>
-        <div className="max-w-5xl mx-auto px-8 py-28 w-full">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-6" style={{ color: '#2D4A3E' }}>
-              MUTE EYELASH SALON · EST. 2023
-            </p>
-            <h1 className="text-5xl lg:text-7xl font-bold leading-[1.08] mb-8"
-              style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C', letterSpacing: '-0.03em' }}>
-              당신의<br />눈빛을<br />완성합니다
+// ────────────────────────────────────────────────────────────────────
+// HERO
+// ────────────────────────────────────────────────────────────────────
+function Hero() {
+  return (
+    <section id="about" style={{ minHeight: '92vh', padding: '80px 0 100px', position: 'relative', overflow: 'hidden', background: V.bg }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.1fr', gap: 80, alignItems: 'center' }}>
+          {/* 텍스트 */}
+          <div>
+            <div className="mute-eyebrow" style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+              No. 01
+              <span style={{ display: 'inline-block', width: 4, height: 4, background: V.ink3, borderRadius: '50%', margin: '0 10px 2px' }} />
+              Eyelash Atelier
+              <span style={{ display: 'inline-block', width: 4, height: 4, background: V.ink3, borderRadius: '50%', margin: '0 10px 2px' }} />
+              Seoul
+            </div>
+            <h1 style={{
+              fontFamily: V.display,
+              fontSize: 'clamp(72px, 10vw, 148px)',
+              lineHeight: 0.92,
+              letterSpacing: '0.01em',
+              color: V.ink,
+              margin: '32px 0 28px',
+            }}>
+              Quiet<br />
+              <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontWeight: 300 }}>elegance</span><br />
+              for the eyes.
             </h1>
-            <p className="text-lg mb-10 leading-relaxed" style={{ color: 'rgba(28,28,28,0.55)', maxWidth: '420px' }}>
-              속눈썹 펌 전문 살롱 MUTE.<br />
-              클래식·볼륨·하이브리드, 당신에게 맞는 스타일을 찾아드립니다.
+            <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 17, lineHeight: 1.85, color: V.ink2, maxWidth: 440, marginBottom: 40 }}>
+              고요한 시선의 아름다움. MUTE는 자연을 닮은 컬과 결을 손끝의 정성으로 완성합니다.
+              한 사람을 위한 단 하나의 디자인, 그것이 우리의 기준입니다.
             </p>
-            <div className="flex items-center gap-4">
-              <BookingButton size="lg" />
-              <Link href="/login" className="h-12 px-8 rounded-xl text-sm font-medium flex items-center transition-colors"
-                style={{ color: '#2D4A3E' }}>
-                로그인 →
-              </Link>
+            <div style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <a href="#booking" className="mute-btn">
+                예약하기 <span className="material-symbols-outlined">arrow_forward</span>
+              </a>
+              <a href="#menu" className="mute-link">
+                시술 메뉴 보기
+              </a>
             </div>
-            <p className="text-xs mt-5" style={{ color: 'rgba(28,28,28,0.35)' }}>
-              Google 계정으로 간편 가입 · 예약 현황 실시간 확인
-            </p>
-          </div>
-        </div>
-
-        {/* 우측 장식 */}
-        <div className="hidden lg:block absolute right-0 top-16 bottom-0 w-[40vw] overflow-hidden pointer-events-none"
-          style={{ background: 'linear-gradient(135deg, #2D4A3E 0%, #1E3229 100%)' }}>
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 opacity-10">
-            {['LASH', 'PERM', 'CLASSIC', 'VOLUME', 'HYBRID', 'MUTE'].map(w => (
-              <span key={w} className="text-6xl font-bold tracking-widest text-white"
-                style={{ fontFamily: 'var(--font-playfair,serif)' }}>{w}</span>
-            ))}
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center">
-              <Image src="/Logo.png" alt="MUTE" width={160} height={56} className="h-12 w-auto object-contain brightness-0 invert opacity-70 mx-auto mb-4" />
-              <p className="text-white/40 text-xs tracking-[0.3em] uppercase">Eyelash Salon</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 시술 메뉴 */}
-      <section className="py-28 px-8" style={{ background: '#FFFFFF' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-16">
-            <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-3" style={{ color: '#2D4A3E' }}>MENU</p>
-            <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C', letterSpacing: '-0.02em' }}>
-              시술 메뉴
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[
-              { name: '클래식', en: 'Classic', desc: '자연스럽고 깔끔한 1:1 볼륨. 처음 시작하시는 분께 추천드립니다.', price: '60,000', num: '01' },
-              { name: '볼륨', en: 'Volume', desc: '가벼운 팬으로 풍성한 볼륨감. 또렷하고 화려한 눈매 연출.', price: '80,000', num: '02' },
-              { name: '하이브리드', en: 'Hybrid', desc: '클래식과 볼륨의 완벽한 조화. 자연스러우면서도 풍성한 스타일.', price: '70,000', num: '03' },
-            ].map(m => (
-              <div key={m.name} className="p-8 rounded-2xl group transition-all hover:-translate-y-1"
-                style={{ border: '1.5px solid rgba(28,28,28,0.07)', background: '#FAFAF8' }}>
-                <div className="flex items-start justify-between mb-6">
-                  <span className="text-xs font-semibold tracking-[0.15em]" style={{ color: 'rgba(28,28,28,0.25)' }}>{m.num}</span>
-                  <div className="w-6 h-6 rounded-full" style={{ background: '#2D4A3E', opacity: 0.15 }} />
-                </div>
-                <p className="text-xs tracking-[0.15em] uppercase mb-1" style={{ color: '#2D4A3E' }}>{m.en}</p>
-                <h3 className="text-2xl font-bold mb-3" style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C' }}>{m.name}</h3>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: 'rgba(28,28,28,0.5)', minHeight: '60px' }}>{m.desc}</p>
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-xl font-bold" style={{ color: '#2D4A3E' }}>{m.price}<span className="text-sm font-normal ml-0.5">원~</span></p>
-                    <p className="text-xs mt-0.5" style={{ color: 'rgba(28,28,28,0.35)' }}>약 2시간</p>
+            {/* 통계 */}
+            <div style={{ display: 'flex', gap: 56, marginTop: 64, paddingTop: 32, borderTop: `1px solid ${V.line}` }}>
+              {[
+                { k: 'Established', v: '2023' },
+                { k: 'Designers', v: '04' },
+                { k: 'Rating', v: '4.97' },
+              ].map(({ k, v }) => (
+                <div key={k}>
+                  <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase', color: V.ink3 }}>{k}</div>
+                  <div style={{ fontFamily: V.display, fontSize: 28, color: V.ink, marginTop: 8 }}>
+                    {v}
+                    {k === 'Rating' && <span style={{ fontSize: 14, color: V.gold, marginLeft: 6 }}>★</span>}
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+          {/* 이미지 */}
+          <div style={{ position: 'relative', aspectRatio: '4/5', background: V.bgSoft }}>
+            <div style={{ position: 'absolute', top: 24, left: 24, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+              Plate I · MMXXVI
+            </div>
+            <EyeEditorial color="#2A3A2C" bg="#F2ECDD" />
+            <div style={{ position: 'absolute', bottom: 24, right: 24, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+              Cilium · Atelier MUTE
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// MENU
+// ────────────────────────────────────────────────────────────────────
+const MENU_ITEMS = [
+  { num: '01', en: 'Natural Curl',    kr: '내츄럴 컬 펌',          dur: '90 MIN',  price: '88' },
+  { num: '02', en: 'Volume Lift',     kr: '볼륨 리프트 펌',         dur: '110 MIN', price: '110' },
+  { num: '03', en: 'Keratin Care',    kr: '케라틴 케어 펌',         dur: '120 MIN', price: '132' },
+  { num: '04', en: 'Hybrid Design',   kr: '하이브리드 디자인',       dur: '120 MIN', price: '148' },
+  { num: '05', en: 'Lash Botox',      kr: '래쉬 보톡스 트리트먼트', dur: '60 MIN',  price: '78' },
+  { num: '06', en: 'Refill',          kr: '리필 (3주 이내)',         dur: '60 MIN',  price: '65' },
+  { num: '07', en: 'Brow Lamination', kr: '브로우 라미네이션',       dur: '70 MIN',  price: '92' },
+  { num: '08', en: 'Removal',         kr: '제거 · 케어',             dur: '40 MIN',  price: '38' },
+]
+
+function Menu() {
+  return (
+    <section id="menu" style={{ padding: '120px 0', background: V.bg }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
+        {/* 섹션 헤더 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 32, alignItems: 'end', marginBottom: 72 }}>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12 }}>No. 02 / Menu</div>
+          <h2 style={{ fontFamily: V.display, fontSize: 'clamp(48px, 6vw, 84px)', lineHeight: 1, letterSpacing: '0.02em', color: V.ink, margin: 0 }}>A measured menu.</h2>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12, textAlign: 'right' }}>시술 메뉴 · ₩ KRW</div>
+        </div>
+        {/* 메뉴 그리드 */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: `1px solid ${V.line}` }}>
+          {MENU_ITEMS.map((item, idx) => (
+            <div
+              key={item.num}
+              style={{
+                display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: 28, alignItems: 'center',
+                padding: idx % 2 === 0 ? '32px 56px 32px 0' : '32px 0 32px 56px',
+                borderBottom: `1px solid ${V.line}`,
+                borderRight: idx % 2 === 0 ? `1px solid ${V.line}` : 'none',
+                transition: 'background 200ms ease',
+              }}
+            >
+              <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3 }}>{item.num}</div>
+              <div>
+                <div style={{ fontFamily: V.serif, fontSize: 24, color: V.ink }}>{item.en}</div>
+                <span style={{ fontFamily: V.kr, fontSize: 13, color: V.ink3, display: 'block', letterSpacing: '0.05em', marginTop: 2, fontWeight: 300 }}>{item.kr}</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-28 px-8" style={{ background: '#FAFAF8' }}>
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-16">
-            <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-3" style={{ color: '#2D4A3E' }}>HOW IT WORKS</p>
-            <h2 className="text-4xl font-bold" style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C', letterSpacing: '-0.02em' }}>
-              예약 방법
-            </h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { step: '01', title: '회원가입', desc: 'Google 계정으로 1분 안에 간편하게 가입합니다.' },
-              { step: '02', title: '메뉴 & 날짜 선택', desc: '원하는 시술 메뉴와 날짜, 시간을 직접 선택합니다.' },
-              { step: '03', title: '예약 확정', desc: '예약 확인 후 연락드립니다. 예약 현황은 앱에서 확인 가능합니다.' },
-            ].map((s, i) => (
-              <div key={s.step} className="flex gap-5">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                  style={{ background: '#2D4A3E' }}>{i + 1}</div>
-                <div>
-                  <h3 className="text-base font-bold mb-2" style={{ color: '#1C1C1C' }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: 'rgba(28,28,28,0.5)' }}>{s.desc}</p>
-                </div>
+              <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3, textTransform: 'uppercase' }}>{item.dur}</div>
+              <div style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>
+                {item.price}<small style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.2em', color: V.ink3, marginLeft: 4 }}>,000</small>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-28 px-8" style={{ background: '#2D4A3E' }}>
-        <div className="max-w-5xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-3 text-white/40">RESERVATION</p>
-            <h2 className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-playfair,serif)', letterSpacing: '-0.02em' }}>
-              지금 예약하기
-            </h2>
-            <p className="text-base mt-3 text-white/55">Google 계정으로 간편하게 시작하세요.</p>
-          </div>
-          <BookingButton size="lg" variant="white" />
-        </div>
-      </section>
-
-      {/* 푸터 */}
-      <footer className="py-10 px-8" style={{ background: '#1C1C1C' }}>
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <Image src="/Logo.png" alt="MUTE" width={80} height={28} className="h-6 w-auto object-contain brightness-0 invert opacity-50" />
-          <p className="text-xs" style={{ color: 'rgba(245,240,232,0.3)' }}>
-            © 2023 MUTE EYELASH SALON · All rights reserved ·{' '}
-            <Link href="/privacy" className="hover:underline" style={{ color: 'rgba(245,240,232,0.5)' }}>개인정보처리방침</Link>
+        {/* 하단 */}
+        <div style={{ marginTop: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24, borderTop: `1px solid ${V.line}` }}>
+          <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 14, color: V.ink3, maxWidth: 520, margin: 0 }}>
+            모든 시술은 1:1 디자이너 상담을 통해 진행되며, 첫 방문 시 10% 할인이 적용됩니다.
           </p>
+          <a href="#booking" className="mute-link">
+            예약하기 <span className="material-symbols-outlined" style={{ fontSize: 14 }}>arrow_forward</span>
+          </a>
         </div>
-      </footer>
+      </div>
+    </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// QUOTE BAND
+// ────────────────────────────────────────────────────────────────────
+function QuoteBand() {
+  return (
+    <section style={{ padding: '100px 0', background: V.bgPaper }}>
+      <div style={{ maxWidth: 920, margin: '0 auto', padding: '0 56px', textAlign: 'center' }}>
+        <FlourishRule width={96} color="#9B8559" />
+        <div style={{
+          fontFamily: V.serifItalic, fontStyle: 'italic', fontWeight: 300,
+          fontSize: 'clamp(28px, 3.6vw, 44px)', lineHeight: 1.35,
+          color: V.ink, margin: '24px 0 32px',
+        }}>
+          &ldquo;시선은 말보다 먼저 닿는다.{' '}
+          <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic' }}>우리는 그 첫 인사를 다듬는 사람이다.</span>
+          &rdquo;
+        </div>
+        <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+          — Park Hyein, Founder & Lead Designer
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// CALENDAR (BOOKING)
+// ────────────────────────────────────────────────────────────────────
+const KOR_MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const DOW = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+const TIME_SLOTS = ['11:00', '12:30', '14:00', '15:30', '17:00', '18:30', '20:00']
+
+const SERVICES = [
+  { id: 's1', name: 'Natural Curl',  kr: '내츄럴 컬 펌',  price: 88000,  dur: '90min' },
+  { id: 's2', name: 'Volume Lift',   kr: '볼륨 리프트',   price: 110000, dur: '110min' },
+  { id: 's3', name: 'Keratin Care',  kr: '케라틴 케어',   price: 132000, dur: '120min' },
+  { id: 's4', name: 'Refill · Care', kr: '리필 · 관리',   price: 65000,  dur: '60min' },
+]
+
+type Picked = { y: number; m: number; d: number }
+
+function CalendarSection() {
+  const router = useRouter()
+  const today = new Date(2026, 4, 4)
+  const [view, setView] = useState({ y: 2026, m: 4 })
+  const [picked, setPicked] = useState<Picked | null>(null)
+  const [slot, setSlot] = useState<string | null>(null)
+  const [service, setService] = useState('s1')
+
+  const days = useMemo(() => {
+    const first = new Date(view.y, view.m, 1)
+    const startDow = first.getDay()
+    const last = new Date(view.y, view.m + 1, 0).getDate()
+    const arr: (number | null)[] = []
+    for (let i = 0; i < startDow; i++) arr.push(null)
+    for (let d = 1; d <= last; d++) arr.push(d)
+    while (arr.length % 7 !== 0) arr.push(null)
+    return arr
+  }, [view])
+
+  const isAvailable = (d: number | null): boolean => {
+    if (!d) return false
+    const dt = new Date(view.y, view.m, d)
+    if (dt < new Date(today.getFullYear(), today.getMonth(), today.getDate())) return false
+    if (dt.getDay() === 0) return false
+    return d % 2 !== 0 || d % 3 === 0
+  }
+
+  const isToday = (d: number) => d === today.getDate() && view.m === today.getMonth() && view.y === today.getFullYear()
+  const isPicked = (d: number) => !!picked && d === picked.d && picked.m === view.m && picked.y === view.y
+
+  const moveMonth = (delta: number) => {
+    let m = view.m + delta, y = view.y
+    if (m < 0) { m = 11; y-- }
+    if (m > 11) { m = 0; y++ }
+    setView({ y, m })
+  }
+
+  const takenForDay = picked ? new Set(['12:30', '17:00'].slice(0, (picked.d % 3) + 1)) : new Set<string>()
+  const svc = SERVICES.find(s => s.id === service)!
+  const labelDate = picked ? `${KOR_MONTH[picked.m]} ${String(picked.d).padStart(2, '0')}, ${picked.y}` : '— · —'
+
+  function handleConfirm() {
+    const params = new URLSearchParams()
+    if (picked) params.set('date', `${picked.y}-${String(picked.m + 1).padStart(2, '0')}-${String(picked.d).padStart(2, '0')}`)
+    if (slot) params.set('time', slot)
+    params.set('menu', svc.name)
+    router.push(`/customer/booking?${params.toString()}`)
+  }
+
+  const dayBtnStyle = (d: number): React.CSSProperties => ({
+    aspectRatio: '1',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    fontFamily: V.display, fontSize: 18,
+    color: isPicked(d) ? V.bgSoft : isToday(d) ? V.gold : !isAvailable(d) ? V.ink3 : V.ink,
+    border: isPicked(d) ? `1px solid ${V.ink}` : '1px solid transparent',
+    borderRadius: '50%',
+    background: isPicked(d) ? V.ink : 'transparent',
+    opacity: !isAvailable(d) ? 0.3 : 1,
+    cursor: isAvailable(d) ? 'pointer' : 'not-allowed',
+    position: 'relative',
+    transition: 'all 200ms ease',
+  })
+
+  return (
+    <section id="booking" style={{ padding: '120px 0', background: V.bgSoft }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
+        {/* 섹션 헤더 */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 32, alignItems: 'end', marginBottom: 72 }}>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12 }}>No. 03 / Booking</div>
+          <h2 style={{ fontFamily: V.display, fontSize: 'clamp(48px, 6vw, 84px)', lineHeight: 1, letterSpacing: '0.02em', color: V.ink, margin: 0 }}>Reserve a moment.</h2>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12, textAlign: 'right' }}>예약 · 실시간 가능시간</div>
+        </div>
+
+        {/* 캘린더 카드 */}
+        <div style={{
+          background: V.bgSoft, border: `1px solid ${V.lineSoft}`,
+          padding: 56, display: 'grid', gridTemplateColumns: '1.2fr 1px 1fr', gap: 56,
+        }}>
+          {/* 왼쪽: 달력 */}
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+              <button
+                onClick={() => moveMonth(-1)}
+                style={{ width: 32, height: 32, border: `1px solid ${V.line}`, borderRadius: '50%', background: 'transparent', color: V.ink, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 200ms ease' }}
+              ><span className="material-symbols-outlined" style={{ fontSize: 18 }}>chevron_left</span></button>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: V.display, fontSize: 32, color: V.ink, letterSpacing: '0.04em' }}>{KOR_MONTH[view.m]}</div>
+                <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3 }}>{view.y}</div>
+              </div>
+              <button
+                onClick={() => moveMonth(1)}
+                style={{ width: 32, height: 32, border: `1px solid ${V.line}`, borderRadius: '50%', background: 'transparent', color: V.ink, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 200ms ease' }}
+              ><span className="material-symbols-outlined" style={{ fontSize: 18 }}>chevron_right</span></button>
+            </div>
+
+            {/* 요일 헤더 */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+              {DOW.map(d => (
+                <div key={d} style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.2em', textAlign: 'center', color: V.ink3, padding: '8px 0', textTransform: 'uppercase' }}>{d}</div>
+              ))}
+              {days.map((d, i) => {
+                if (!d) return <div key={i} />
+                return (
+                  <button
+                    key={i}
+                    disabled={!isAvailable(d)}
+                    onClick={() => { setPicked({ y: view.y, m: view.m, d }); setSlot(null) }}
+                    style={dayBtnStyle(d)}
+                  >
+                    {d}
+                    {isAvailable(d) && !isPicked(d) && (
+                      <span style={{ position: 'absolute', bottom: 4, width: 3, height: 3, borderRadius: '50%', background: V.gold }} />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* 범례 */}
+            <div style={{ display: 'flex', gap: 24, marginTop: 28, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink3, textTransform: 'uppercase' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: V.gold, display: 'inline-block' }} />예약 가능
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: V.ink, display: 'inline-block' }} />선택됨
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, opacity: 0.5 }}>일요일 휴무</span>
+            </div>
+          </div>
+
+          {/* 구분선 */}
+          <div style={{ background: V.lineSoft }} />
+
+          {/* 오른쪽: 시간 + 메뉴 선택 */}
+          <div>
+            <div>
+              <div style={{ fontFamily: V.display, fontSize: 28, color: V.ink, letterSpacing: '0.02em' }}>
+                {picked ? `${KOR_MONTH[picked.m]} ${picked.d}` : 'Choose a date'}
+              </div>
+              <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.28em', color: V.ink3, textTransform: 'uppercase', marginTop: 6 }}>
+                {picked ? '시간 선택' : '왼쪽 캘린더에서 날짜를 선택하세요'}
+              </div>
+            </div>
+
+            {/* 시간 슬롯 */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 28 }}>
+              {TIME_SLOTS.map(t => {
+                const taken = takenForDay.has(t)
+                const selected = slot === t
+                return (
+                  <button
+                    key={t}
+                    disabled={!picked || taken}
+                    onClick={() => setSlot(t)}
+                    style={{
+                      padding: '14px 18px',
+                      border: `1px solid ${selected ? V.ink : V.lineSoft}`,
+                      background: selected ? V.ink : 'transparent',
+                      fontFamily: V.sans, fontSize: 13,
+                      color: taken ? V.ink3 : selected ? V.bgSoft : V.ink,
+                      letterSpacing: '0.1em', textAlign: 'center',
+                      textDecoration: taken ? 'line-through' : 'none',
+                      opacity: taken ? 0.4 : 1,
+                      cursor: (!picked || taken) ? 'not-allowed' : 'pointer',
+                      transition: 'all 200ms ease',
+                    }}
+                  >{t}</button>
+                )
+              })}
+            </div>
+
+            {/* 서비스 선택 */}
+            <div style={{ marginTop: 32 }}>
+              <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', marginBottom: 12 }}>시술 메뉴</div>
+              <div style={{ display: 'grid', gap: 8 }}>
+                {SERVICES.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => setService(s.id)}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '14px 18px',
+                      border: `1px solid ${service === s.id ? V.ink : V.lineSoft}`,
+                      background: service === s.id ? V.ink : 'transparent',
+                      color: service === s.id ? V.bgSoft : V.ink,
+                      fontFamily: V.serif,
+                      cursor: 'pointer',
+                      transition: 'all 200ms ease',
+                    }}
+                  >
+                    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                      <span style={{ fontSize: 16 }}>{s.name}</span>
+                      <span style={{ fontFamily: V.kr, fontSize: 11, opacity: 0.7, fontWeight: 300 }}>{s.kr} · {s.dur}</span>
+                    </span>
+                    <span style={{ fontFamily: V.display, fontSize: 18 }}>
+                      ₩{s.price / 1000}<small style={{ fontFamily: V.sans, fontSize: 10, opacity: 0.7, marginLeft: 2 }}>K</small>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 요약 */}
+            <div style={{ marginTop: 40, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'grid', gap: 14 }}>
+              {[
+                { k: 'Date', v: labelDate, dim: !picked },
+                { k: 'Time', v: slot || '—', dim: !slot },
+                { k: 'Service', v: svc.name, dim: false },
+              ].map(({ k, v, dim }) => (
+                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{k}</span>
+                  <span style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, fontStyle: dim ? 'italic' : 'normal', opacity: dim ? 0.5 : 1 }}>{v}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 14, borderTop: `1px solid ${V.lineSoft}`, marginTop: 6 }}>
+                <span style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>Total</span>
+                <span style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>₩{svc.price.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <button
+              className="mute-btn"
+              onClick={handleConfirm}
+              style={{
+                width: '100%', justifyContent: 'center', marginTop: 28,
+                opacity: (picked && slot) ? 1 : 0.4,
+                pointerEvents: (picked && slot) ? 'auto' : 'none',
+              }}
+            >
+              예약 확정 <span className="material-symbols-outlined">arrow_forward</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// TREND / JOURNAL
+// ────────────────────────────────────────────────────────────────────
+const TREND_ARTICLES = [
+  {
+    tag: 'Edition 12 · Curl',
+    title: '결을 다듬는다,',
+    titleItalic: '자연스럽게.',
+    desc: '2026년의 시선은 정돈된 자연스러움으로 향합니다. 과장 없는 곡선, 결을 따라 흐르는 부드러운 컬이 봄의 분위기를 완성합니다.',
+    meta: ['READ', '05 MIN', 'By Hyein Park'],
+    large: true,
+    Art: LashStudyA,
+  },
+  {
+    tag: 'Edition 11 · Lift',
+    title: '볼륨이 만드는 깊이',
+    desc: '한 가닥의 두께보다 결의 방향이 인상을 결정합니다. 케라틴 베이스의 리프트 펌이 만들어내는 미묘한 입체감을 소개합니다.',
+    meta: ['READ', '04 MIN'],
+    Art: LashStudyB,
+  },
+  {
+    tag: 'Edition 10 · Care',
+    title: '식물성 케어의 시간',
+    desc: '시술 그 이후, 결을 회복시키는 보태니컬 트리트먼트. 카모마일과 캐스터 오일이 만드는 차분한 회복의 루틴.',
+    meta: ['READ', '06 MIN'],
+    Art: LashStudyC,
+  },
+]
+
+function Trend() {
+  return (
+    <section id="journal" style={{ padding: '120px 0', background: V.bgPaper }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 32, alignItems: 'end', marginBottom: 72 }}>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12 }}>No. 04 / Journal</div>
+          <h2 style={{ fontFamily: V.display, fontSize: 'clamp(48px, 6vw, 84px)', lineHeight: 1, letterSpacing: '0.02em', color: V.ink, margin: 0 }}>Spring trends.</h2>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12, textAlign: 'right' }}>2026 · S/S Edition</div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: 32 }}>
+          {TREND_ARTICLES.map((art) => (
+            <article key={art.tag} style={{ borderTop: `1px solid ${V.line}`, paddingTop: 24 }}>
+              <div style={{ aspectRatio: '4/5', background: V.bgSoft, marginBottom: 28, position: 'relative', overflow: 'hidden' }}>
+                <art.Art />
+              </div>
+              <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{art.tag}</div>
+              <h3 style={{
+                fontFamily: V.display,
+                fontSize: art.large ? 44 : 32,
+                lineHeight: 1.1, color: V.ink, margin: '16px 0', letterSpacing: '0.01em',
+              }}>
+                {art.title}
+                {art.titleItalic && (
+                  <> <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontWeight: 300 }}>{art.titleItalic}</span></>
+                )}
+              </h3>
+              <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 14, lineHeight: 1.7, color: V.ink2, margin: 0 }}>{art.desc}</p>
+              <div style={{ display: 'flex', gap: 16, marginTop: 20, alignItems: 'center', fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink3, textTransform: 'uppercase' }}>
+                {art.meta.map((m, i) => (
+                  <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    {i > 0 && <span style={{ width: 3, height: 3, background: V.ink3, borderRadius: '50%', display: 'inline-block' }} />}
+                    {m}
+                  </span>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// LOCATION
+// ────────────────────────────────────────────────────────────────────
+function Location() {
+  return (
+    <section id="location" style={{ padding: '120px 0', background: V.bg }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 32, alignItems: 'end', marginBottom: 72 }}>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12 }}>No. 05 / Location</div>
+          <h2 style={{ fontFamily: V.display, fontSize: 'clamp(48px, 6vw, 84px)', lineHeight: 1, letterSpacing: '0.02em', color: V.ink, margin: 0 }}>Find us.</h2>
+          <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingBottom: 12, textAlign: 'right' }}>서울 · 성수동</div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 64, alignItems: 'center' }}>
+          {/* 주소 */}
+          <div style={{ paddingRight: 32 }}>
+            <div className="mute-eyebrow" style={{ marginBottom: 24 }}>The Atelier</div>
+            <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 19, lineHeight: 1.7, color: V.ink, margin: 0 }}>
+              서울특별시 성동구<br />
+              성수동2가 아뜰리에길 14<br />
+              <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic' }}>2nd floor, Maison Ode</span>
+            </p>
+            <div style={{ marginTop: 40, display: 'grid', gap: 24 }}>
+              {[
+                { k: 'Hours', v: '화 — 토 · 11:00 — 21:00', sub: '일 · 월 정기 휴무' },
+                { k: 'Subway', v: '2호선 성수역 3번출구 · 도보 6분' },
+                { k: 'Parking', v: '발렛 가능 · 1F 입구', sub: '제휴 주차 2시간' },
+                { k: 'Reach', v: '+82 02 547 0023', last: true },
+              ].map(({ k, v, sub, last }) => (
+                <div key={k} style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: 20, paddingBottom: 18, borderBottom: last ? 'none' : `1px solid ${V.lineSoft}` }}>
+                  <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingTop: 4 }}>{k}</div>
+                  <div style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, lineHeight: 1.5 }}>
+                    {v}
+                    {sub && <><br /><span style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 13, color: V.ink3 }}>{sub}</span></>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 32 }}>
+              <a href="https://map.kakao.com/" target="_blank" rel="noopener noreferrer" className="mute-btn outline">
+                <span className="material-symbols-outlined">map</span> 지도 앱으로 열기
+              </a>
+            </div>
+          </div>
+          {/* 지도 */}
+          <div style={{ position: 'relative', aspectRatio: '5/4', border: `1px solid ${V.lineSoft}`, overflow: 'hidden' }}>
+            <MapArt />
+            <div style={{ position: 'absolute', top: 20, left: 20, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+              N 37.544 · E 127.057
+            </div>
+            <div style={{ position: 'absolute', bottom: 20, right: 20, fontFamily: V.display, fontSize: 14, letterSpacing: '0.4em', color: V.ink }}>
+              SEONGSU · SEOUL
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// FOOTER
+// ────────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer id="contact" style={{ padding: '100px 0 56px', background: V.ink, color: V.bgSoft }}>
+      <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: 56,
+          paddingBottom: 72, borderBottom: 'rgba(242,236,221,0.15) 1px solid',
+        }}>
+          {/* 브랜드 */}
+          <div>
+            <div style={{ fontFamily: V.display, fontSize: 56, letterSpacing: '0.04em' }}>MUTE</div>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginTop: 10 }}>Eyelash Salon · Est. 2023</div>
+            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 18, marginTop: 32, opacity: 0.8, lineHeight: 1.6, maxWidth: 320 }}>
+              한 사람을 위한, 단 하나의 디자인.
+            </p>
+          </div>
+          {/* Visit */}
+          <div>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginBottom: 18 }}>Visit</div>
+            {['서울 성수동2가', '아뜰리에길 14, 2F', '11:00 — 21:00'].map(t => (
+              <p key={t} style={{ fontFamily: V.serif, fontSize: 16, lineHeight: 1.9, opacity: 0.85, margin: 0 }}>{t}</p>
+            ))}
+          </div>
+          {/* Reach */}
+          <div>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginBottom: 18 }}>Reach</div>
+            {['+82 02 547 0023', 'hello@mute-salon.kr', '@mute.eyelash'].map(t => (
+              <a key={t} href="#" style={{ fontFamily: V.serif, fontSize: 16, lineHeight: 1.9, opacity: 0.85, display: 'block', color: 'inherit', textDecoration: 'none' }}>{t}</a>
+            ))}
+          </div>
+          {/* Newsletter */}
+          <div>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginBottom: 18 }}>Letter</div>
+            <p style={{ opacity: 0.7, fontSize: 14, lineHeight: 1.6, marginBottom: 16, fontFamily: V.serif }}>새 시술과 트렌드를 가장 먼저 받아보세요.</p>
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(242,236,221,0.3)', paddingBottom: 8 }}>
+              <input
+                placeholder="email address"
+                style={{ flex: 1, background: 'transparent', border: 'none', color: V.bgSoft, fontFamily: V.serif, fontSize: 16, outline: 'none' }}
+              />
+              <span className="material-symbols-outlined" style={{ fontSize: 18, opacity: 0.7 }}>arrow_forward</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 32, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', opacity: 0.5, textTransform: 'uppercase' }}>
+          <span>© 2026 MUTE Eyelash Salon</span>
+          <span style={{ display: 'flex', gap: 24 }}>
+            <Link href="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>개인정보처리방침</Link>
+            <span>Crafted with quiet hands · Seoul</span>
+          </span>
+        </div>
+      </div>
+    </footer>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// LOGIN MODAL
+// ────────────────────────────────────────────────────────────────────
+function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [tab, setTab] = useState<'login' | 'signup'>('login')
+
+  useEffect(() => {
+    if (open) document.body.style.overflow = 'hidden'
+    else document.body.style.overflow = ''
+    return () => { document.body.style.overflow = '' }
+  }, [open])
+
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(42,58,44,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 100, opacity: open ? 1 : 0, pointerEvents: open ? 'auto' : 'none',
+        transition: 'opacity 250ms ease',
+        backdropFilter: 'blur(4px)',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: 'min(960px, 92vw)', maxHeight: '90vh', overflow: 'auto',
+          background: V.bgSoft, display: 'grid', gridTemplateColumns: '1fr 1fr',
+          position: 'relative', border: `1px solid ${V.lineSoft}`,
+          transform: open ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'transform 300ms ease',
+        }}
+      >
+        {/* 닫기 */}
+        <button
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: 20, right: 20,
+            width: 36, height: 36, borderRadius: '50%',
+            border: '1px solid rgba(242,236,221,0.3)',
+            background: 'transparent', color: V.bgSoft,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 2, cursor: 'pointer',
+          }}
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
+        </button>
+        {/* 왼쪽 패널 */}
+        <aside style={{
+          background: V.ink, color: V.bgSoft, padding: '64px 48px',
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.6)' }}>Members · MUTE</div>
+            <h3 style={{ fontFamily: V.display, fontSize: 56, lineHeight: 1, letterSpacing: '0.02em', margin: '24px 0 18px' }}>Welcome<br />back.</h3>
+            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.6, color: 'rgba(242,236,221,0.75)', margin: 0 }}>
+              &ldquo;한 사람의 시선을 기억하는 일, 그것이 우리의 시작입니다.&rdquo;
+            </p>
+          </div>
+          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: 'rgba(242,236,221,0.5)', textTransform: 'uppercase' }}>
+            Member benefits · 시술 5% 적립 · 우선 예약
+          </div>
+        </aside>
+        {/* 오른쪽 폼 */}
+        <div style={{ padding: '64px 56px' }}>
+          <div style={{ display: 'flex', gap: 32, borderBottom: `1px solid ${V.line}`, marginBottom: 36 }}>
+            {(['login', 'signup'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                style={{
+                  fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em',
+                  color: tab === t ? V.ink : V.ink3,
+                  textTransform: 'uppercase', background: 'none', border: 'none',
+                  borderBottom: tab === t ? `1px solid ${V.ink}` : '1px solid transparent',
+                  padding: '0 0 14px', marginBottom: -1, cursor: 'pointer',
+                }}
+              >{t === 'login' ? '로그인' : '회원가입'}</button>
+            ))}
+          </div>
+
+          {tab === 'login' ? (
+            <div>
+              {[
+                { label: 'Email', type: 'email', defaultValue: '' },
+                { label: 'Password', type: 'password', defaultValue: '' },
+              ].map(f => (
+                <div key={f.label} style={{ display: 'grid', gap: 8, marginBottom: 22 }}>
+                  <label style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{f.label}</label>
+                  <input
+                    type={f.type}
+                    style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, background: 'transparent', border: 'none', borderBottom: `1px solid ${V.line}`, padding: '10px 0', outline: 'none' }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: V.sans, fontSize: 11, color: V.ink3, letterSpacing: '0.1em', marginBottom: 28 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" defaultChecked /> 자동 로그인
+                </label>
+                <Link href="/login" style={{ color: V.ink3, borderBottom: `1px solid ${V.ink3}`, textDecoration: 'none' }}>비밀번호 찾기</Link>
+              </div>
+              <Link href="/login" className="mute-btn" style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', textDecoration: 'none' }}>
+                로그인 <span className="material-symbols-outlined">arrow_forward</span>
+              </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '32px 0 20px', color: V.ink3, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>
+                <span style={{ flex: 1, height: 1, background: V.line }} />
+                <span>or</span>
+                <span style={{ flex: 1, height: 1, background: V.line }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                {['Kakao', 'Naver', 'Apple'].map(s => (
+                  <button
+                    key={s}
+                    style={{
+                      padding: 14, border: `1px solid ${V.line}`, background: 'transparent',
+                      fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink,
+                      textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor: 'pointer', transition: 'all 200ms ease',
+                    }}
+                  >{s}</button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              {[
+                { label: 'Name · 성함', type: 'text' },
+                { label: 'Email', type: 'email' },
+                { label: 'Phone · 연락처', type: 'tel' },
+                { label: 'Password', type: 'password' },
+              ].map(f => (
+                <div key={f.label} style={{ display: 'grid', gap: 8, marginBottom: 22 }}>
+                  <label style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{f.label}</label>
+                  <input
+                    type={f.type}
+                    style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, background: 'transparent', border: 'none', borderBottom: `1px solid ${V.line}`, padding: '10px 0', outline: 'none' }}
+                  />
+                </div>
+              ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28, fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
+                <input type="checkbox" /> 이용약관 및 개인정보 처리방침 동의
+              </div>
+              <Link href="/signup" className="mute-btn" style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', textDecoration: 'none' }}>
+                가입하기 <span className="material-symbols-outlined">arrow_forward</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ────────────────────────────────────────────────────────────────────
+// PAGE ROOT
+// ────────────────────────────────────────────────────────────────────
+export default function LandingPage() {
+  const [showLogin, setShowLogin] = useState(false)
+
+  return (
+    <div className="mute-body">
+      <Nav onLogin={() => setShowLogin(true)} />
+      <Hero />
+      <Menu />
+      <QuoteBand />
+      <CalendarSection />
+      <Trend />
+      <Location />
+      <Footer />
+      <LoginModal open={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   )
 }
