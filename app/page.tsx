@@ -2,13 +2,10 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import {
   FlourishRule,
-  EyeEditorial,
-  LashStudyA,
-  LashStudyB,
-  LashStudyC,
   MapArt,
 } from '@/components/landing/mute-ornaments'
 
@@ -153,12 +150,18 @@ function Hero() {
             </div>
           </div>
           {/* 이미지 */}
-          <div style={{ position: 'relative', aspectRatio: '4/5', background: V.bgSoft }}>
-            <div style={{ position: 'absolute', top: 24, left: 24, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+          <div style={{ position: 'relative', aspectRatio: '4/5', background: V.bgSoft, overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 24, left: 24, zIndex: 2, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
               Plate I · MMXXVI
             </div>
-            <EyeEditorial color="#2A3A2C" bg="#F2ECDD" />
-            <div style={{ position: 'absolute', bottom: 24, right: 24, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+            <Image
+              src="/images/name-card.png"
+              alt="MUTE Eyelash Salon"
+              fill
+              style={{ objectFit: 'cover', objectPosition: 'center' }}
+              priority
+            />
+            <div style={{ position: 'absolute', bottom: 24, right: 24, zIndex: 2, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
               Cilium · Atelier MUTE
             </div>
           </div>
@@ -605,21 +608,26 @@ const TREND_ARTICLES = [
     desc: '2026년의 시선은 정돈된 자연스러움으로 향합니다. 과장 없는 곡선, 결을 따라 흐르는 부드러운 컬이 봄의 분위기를 완성합니다.',
     meta: ['READ', '05 MIN', 'By Hyein Park'],
     large: true,
-    Art: LashStudyA,
+    img: '/images/classic-lash.png',
+    imgAlt: 'Classic Lash',
   },
   {
-    tag: 'Edition 11 · Lift',
+    tag: 'Edition 11 · Hybrid',
     title: '볼륨이 만드는 깊이',
-    desc: '한 가닥의 두께보다 결의 방향이 인상을 결정합니다. 케라틴 베이스의 리프트 펌이 만들어내는 미묘한 입체감을 소개합니다.',
+    desc: '한 가닥의 두께보다 결의 방향이 인상을 결정합니다. 하이브리드 디자인이 만들어내는 미묘한 입체감을 소개합니다.',
     meta: ['READ', '04 MIN'],
-    Art: LashStudyB,
+    large: false,
+    img: '/images/hybrid-lash.jpg',
+    imgAlt: 'Hybrid Lash',
   },
   {
-    tag: 'Edition 10 · Care',
-    title: '식물성 케어의 시간',
-    desc: '시술 그 이후, 결을 회복시키는 보태니컬 트리트먼트. 카모마일과 캐스터 오일이 만드는 차분한 회복의 루틴.',
+    tag: 'Edition 10 · Perm',
+    title: '컬의 방향을 설계하다',
+    desc: '펌 포인트 익스텐션이 만드는 섬세한 리프트. c-curl 11mm의 정밀한 각도가 시선의 인상을 바꿉니다.',
     meta: ['READ', '06 MIN'],
-    Art: LashStudyC,
+    large: false,
+    img: '/images/perm-extension.jpg',
+    imgAlt: 'Perm Extension',
   },
 ]
 
@@ -636,7 +644,12 @@ function Trend() {
           {TREND_ARTICLES.map((art) => (
             <article key={art.tag} style={{ borderTop: `1px solid ${V.line}`, paddingTop: 24 }}>
               <div style={{ aspectRatio: '4/5', background: V.bgSoft, marginBottom: 28, position: 'relative', overflow: 'hidden' }}>
-                <art.Art />
+                <Image
+                  src={art.img}
+                  alt={art.imgAlt}
+                  fill
+                  style={{ objectFit: 'cover', objectPosition: 'center top' }}
+                />
               </div>
               <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{art.tag}</div>
               <h3 style={{
@@ -645,7 +658,7 @@ function Trend() {
                 lineHeight: 1.1, color: V.ink, margin: '16px 0', letterSpacing: '0.01em',
               }}>
                 {art.title}
-                {art.titleItalic && (
+                {'titleItalic' in art && art.titleItalic && (
                   <> <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontWeight: 300 }}>{art.titleItalic}</span></>
                 )}
               </h3>
