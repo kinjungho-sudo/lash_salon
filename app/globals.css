@@ -9,12 +9,12 @@
   --mute-bg: #E9E2D2;
   --mute-bg-soft: #F2ECDD;
   --mute-bg-paper: #EFE7D2;
-  --mute-ink: #2A3A2C;
-  --mute-ink-2: #3F4F3A;
-  --mute-ink-3: #6B7363;
+  --mute-ink: #1A2A1C;        /* 강화: #2A3A2C → #1A2A1C */
+  --mute-ink-2: #2A3A2C;      /* 강화: #3F4F3A → #2A3A2C */
+  --mute-ink-3: #4A5A44;      /* 강화: #6B7363 → #4A5A44 */
   --mute-line: #C9BFA6;
   --mute-line-soft: #D9CFB8;
-  --mute-gold: #9B8559;
+  --mute-gold: #7A6440;       /* 강화: #9B8559 → #7A6440 */
 
   --mute-serif: var(--font-cormorant), 'Cormorant Garamond', serif;
   --mute-serif-italic: var(--font-cormorant-italic), 'Cormorant', serif;

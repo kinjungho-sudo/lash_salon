@@ -123,7 +123,7 @@ function Hero() {
               <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontWeight: 300 }}>elegance</span><br />
               for the eyes.
             </h1>
-            <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 17, lineHeight: 1.85, color: V.ink2, maxWidth: 440, marginBottom: 40 }}>
+            <p style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 16, lineHeight: 1.9, color: V.ink2, maxWidth: 440, marginBottom: 40 }}>
               고요한 시선의 아름다움. MUTE는 자연을 닮은 컬과 결을 손끝의 정성으로 완성합니다.
               한 사람을 위한 단 하나의 디자인, 그것이 우리의 기준입니다.
             </p>
@@ -208,7 +208,7 @@ function Menu() {
               <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3 }}>{item.num}</div>
               <div>
                 <div style={{ fontFamily: V.serif, fontSize: 24, color: V.ink }}>{item.en}</div>
-                <span style={{ fontFamily: V.kr, fontSize: 13, color: V.ink3, display: 'block', letterSpacing: '0.05em', marginTop: 2, fontWeight: 300 }}>{item.kr}</span>
+                <span style={{ fontFamily: V.sans, fontSize: 12, color: V.ink3, display: 'block', letterSpacing: '0.04em', marginTop: 3, fontWeight: 400 }}>{item.kr}</span>
               </div>
               <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3, textTransform: 'uppercase' }}>{item.dur}</div>
               <div style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>
@@ -219,7 +219,7 @@ function Menu() {
         </div>
         {/* 하단 */}
         <div style={{ marginTop: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24, borderTop: `1px solid ${V.line}` }}>
-          <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 14, color: V.ink3, maxWidth: 520, margin: 0 }}>
+          <p style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 14, color: V.ink3, maxWidth: 520, margin: 0, lineHeight: 1.75 }}>
             모든 시술은 1:1 디자이너 상담을 통해 진행되며, 첫 방문 시 10% 할인이 적용됩니다.
           </p>
           <a href="#booking" className="mute-link">
@@ -248,7 +248,7 @@ function QuoteBand() {
           <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic' }}>우리는 그 첫 인사를 다듬는 사람이다.</span>
           &rdquo;
         </div>
-        <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: V.sans, fontSize: 12, letterSpacing: '0.2em', color: V.ink3, fontWeight: 500 }}>
           — Park Hyein, Founder & Lead Designer
         </div>
       </div>
@@ -464,7 +464,7 @@ function CalendarSection() {
                   >
                     <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                       <span style={{ fontSize: 16 }}>{s.name}</span>
-                      <span style={{ fontFamily: V.kr, fontSize: 11, opacity: 0.7, fontWeight: 300 }}>{s.kr} · {s.dur}</span>
+                      <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, fontWeight: 400, marginTop: 2 }}>{s.kr} · {s.dur}</span>
                     </span>
                     <span style={{ fontFamily: V.display, fontSize: 18 }}>
                       ₩{s.price / 1000}<small style={{ fontFamily: V.sans, fontSize: 10, opacity: 0.7, marginLeft: 2 }}>K</small>
@@ -565,7 +565,7 @@ function Trend() {
                   <> <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontWeight: 300 }}>{art.titleItalic}</span></>
                 )}
               </h3>
-              <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 14, lineHeight: 1.7, color: V.ink2, margin: 0 }}>{art.desc}</p>
+              <p style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 14, lineHeight: 1.8, color: V.ink2, margin: 0 }}>{art.desc}</p>
               <div style={{ display: 'flex', gap: 16, marginTop: 20, alignItems: 'center', fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink3, textTransform: 'uppercase' }}>
                 {art.meta.map((m, i) => (
                   <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -598,10 +598,10 @@ function Location() {
           {/* 주소 */}
           <div style={{ paddingRight: 32 }}>
             <div className="mute-eyebrow" style={{ marginBottom: 24 }}>The Atelier</div>
-            <p style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 19, lineHeight: 1.7, color: V.ink, margin: 0 }}>
+            <p style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 17, lineHeight: 1.9, color: V.ink, margin: 0 }}>
               서울특별시 성동구<br />
               성수동2가 아뜰리에길 14<br />
-              <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic' }}>2nd floor, Maison Ode</span>
+              <span style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16 }}>2nd floor, Maison Ode</span>
             </p>
             <div style={{ marginTop: 40, display: 'grid', gap: 24 }}>
               {[
@@ -612,9 +612,9 @@ function Location() {
               ].map(({ k, v, sub, last }) => (
                 <div key={k} style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: 20, paddingBottom: 18, borderBottom: last ? 'none' : `1px solid ${V.lineSoft}` }}>
                   <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', paddingTop: 4 }}>{k}</div>
-                  <div style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, lineHeight: 1.5 }}>
+                  <div style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 15, color: V.ink, lineHeight: 1.7 }}>
                     {v}
-                    {sub && <><br /><span style={{ fontFamily: V.kr, fontWeight: 300, fontSize: 13, color: V.ink3 }}>{sub}</span></>}
+                    {sub && <><br /><span style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 13, color: V.ink3 }}>{sub}</span></>}
                   </div>
                 </div>
               ))}
@@ -664,20 +664,20 @@ function Footer() {
           <div>
             <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginBottom: 18 }}>Visit</div>
             {['서울 성수동2가', '아뜰리에길 14, 2F', '11:00 — 21:00'].map(t => (
-              <p key={t} style={{ fontFamily: V.serif, fontSize: 16, lineHeight: 1.9, opacity: 0.85, margin: 0 }}>{t}</p>
+              <p key={t} style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 15, lineHeight: 1.9, opacity: 0.9, margin: 0 }}>{t}</p>
             ))}
           </div>
           {/* Reach */}
           <div>
             <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginBottom: 18 }}>Reach</div>
             {['+82 02 547 0023', 'hello@mute-salon.kr', '@mute.eyelash'].map(t => (
-              <a key={t} href="#" style={{ fontFamily: V.serif, fontSize: 16, lineHeight: 1.9, opacity: 0.85, display: 'block', color: 'inherit', textDecoration: 'none' }}>{t}</a>
+              <a key={t} href="#" style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 15, lineHeight: 1.9, opacity: 0.9, display: 'block', color: 'inherit', textDecoration: 'none' }}>{t}</a>
             ))}
           </div>
           {/* Newsletter */}
           <div>
             <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.6, textTransform: 'uppercase', marginBottom: 18 }}>Letter</div>
-            <p style={{ opacity: 0.7, fontSize: 14, lineHeight: 1.6, marginBottom: 16, fontFamily: V.serif }}>새 시술과 트렌드를 가장 먼저 받아보세요.</p>
+            <p style={{ opacity: 0.85, fontSize: 14, lineHeight: 1.7, marginBottom: 16, fontFamily: V.sans, fontWeight: 400 }}>새 시술과 트렌드를 가장 먼저 받아보세요.</p>
             <div style={{ display: 'flex', borderBottom: '1px solid rgba(242,236,221,0.3)', paddingBottom: 8 }}>
               <input
                 placeholder="email address"
@@ -755,7 +755,7 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           <div>
             <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.6)' }}>Members · MUTE</div>
             <h3 style={{ fontFamily: V.display, fontSize: 56, lineHeight: 1, letterSpacing: '0.02em', margin: '24px 0 18px' }}>Welcome<br />back.</h3>
-            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.6, color: 'rgba(242,236,221,0.75)', margin: 0 }}>
+            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.7, color: 'rgba(242,236,221,0.9)', margin: 0 }}>
               &ldquo;한 사람의 시선을 기억하는 일, 그것이 우리의 시작입니다.&rdquo;
             </p>
           </div>
