@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   FlourishRule,
   EyeEditorial,
@@ -171,18 +171,19 @@ function Hero() {
 // ────────────────────────────────────────────────────────────────────
 // MENU
 // ────────────────────────────────────────────────────────────────────
-const MENU_ITEMS = [
-  { num: '01', en: 'Natural Curl',    kr: '내츄럴 컬 펌',          dur: '90 MIN',  price: '88' },
-  { num: '02', en: 'Volume Lift',     kr: '볼륨 리프트 펌',         dur: '110 MIN', price: '110' },
-  { num: '03', en: 'Keratin Care',    kr: '케라틴 케어 펌',         dur: '120 MIN', price: '132' },
-  { num: '04', en: 'Hybrid Design',   kr: '하이브리드 디자인',       dur: '120 MIN', price: '148' },
-  { num: '05', en: 'Lash Botox',      kr: '래쉬 보톡스 트리트먼트', dur: '60 MIN',  price: '78' },
-  { num: '06', en: 'Refill',          kr: '리필 (3주 이내)',         dur: '60 MIN',  price: '65' },
-  { num: '07', en: 'Brow Lamination', kr: '브로우 라미네이션',       dur: '70 MIN',  price: '92' },
-  { num: '08', en: 'Removal',         kr: '제거 · 케어',             dur: '40 MIN',  price: '38' },
-]
+type DbMenu = { id: string; name: string; price: number; duration_min: number; color_tag?: string }
 
-function Menu() {
+function getCategoryLabel(name: string): string {
+  // name에 키워드가 포함되어 있으면 해당 카테고리
+  if (name.includes('클래식')) return '클래식'
+  if (name.includes('볼륨')) return '볼륨'
+  if (name.includes('하이브리드')) return '하이브리드'
+  return ''
+}
+
+function Menu({ menus }: { menus: DbMenu[] }) {
+  const items = menus.length > 0 ? menus : []
+
   return (
     <section id="menu" style={{ padding: '120px 0', background: V.bg }}>
       <div style={{ maxWidth: 1440, margin: '0 auto', padding: '0 56px' }}>
@@ -194,28 +195,40 @@ function Menu() {
         </div>
         {/* 메뉴 그리드 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderTop: `1px solid ${V.line}` }}>
-          {MENU_ITEMS.map((item, idx) => (
-            <div
-              key={item.num}
-              style={{
-                display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: 28, alignItems: 'center',
-                padding: idx % 2 === 0 ? '32px 56px 32px 0' : '32px 0 32px 56px',
-                borderBottom: `1px solid ${V.line}`,
-                borderRight: idx % 2 === 0 ? `1px solid ${V.line}` : 'none',
-                transition: 'background 200ms ease',
-              }}
-            >
-              <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3 }}>{item.num}</div>
-              <div>
-                <div style={{ fontFamily: V.serif, fontSize: 24, color: V.ink }}>{item.en}</div>
-                <span style={{ fontFamily: V.sans, fontSize: 12, color: V.ink3, display: 'block', letterSpacing: '0.04em', marginTop: 3, fontWeight: 400 }}>{item.kr}</span>
+          {items.map((item, idx) => {
+            const cat = getCategoryLabel(item.name)
+            const priceK = Math.round(item.price / 1000)
+            const durLabel = `${item.duration_min} MIN`
+            const numStr = String(idx + 1).padStart(2, '0')
+            return (
+              <div
+                key={item.id}
+                style={{
+                  display: 'grid', gridTemplateColumns: '60px 1fr auto auto', gap: 28, alignItems: 'center',
+                  padding: idx % 2 === 0 ? '32px 56px 32px 0' : '32px 0 32px 56px',
+                  borderBottom: `1px solid ${V.line}`,
+                  borderRight: idx % 2 === 0 ? `1px solid ${V.line}` : 'none',
+                  transition: 'background 200ms ease',
+                }}
+              >
+                <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3 }}>{numStr}</div>
+                <div>
+                  <div style={{ fontFamily: V.serif, fontSize: 24, color: V.ink }}>
+                    {item.name}
+                    {cat && (
+                      <span style={{ fontFamily: V.sans, fontSize: 12, color: V.ink3, fontWeight: 400, marginLeft: 8, letterSpacing: '0.04em' }}>
+                        ({cat})
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3, textTransform: 'uppercase' }}>{durLabel}</div>
+                <div style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>
+                  {priceK}<small style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.2em', color: V.ink3, marginLeft: 4 }}>,000</small>
+                </div>
               </div>
-              <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink3, textTransform: 'uppercase' }}>{item.dur}</div>
-              <div style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>
-                {item.price}<small style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.2em', color: V.ink3, marginLeft: 4 }}>,000</small>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
         {/* 하단 */}
         <div style={{ marginTop: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 24, borderTop: `1px solid ${V.line}` }}>
@@ -263,22 +276,25 @@ const KOR_MONTH = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'
 const DOW = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 const TIME_SLOTS = ['11:00', '12:30', '14:00', '15:30', '17:00', '18:30', '20:00']
 
-const SERVICES = [
-  { id: 's1', name: 'Natural Curl',  kr: '내츄럴 컬 펌',  price: 88000,  dur: '90min' },
-  { id: 's2', name: 'Volume Lift',   kr: '볼륨 리프트',   price: 110000, dur: '110min' },
-  { id: 's3', name: 'Keratin Care',  kr: '케라틴 케어',   price: 132000, dur: '120min' },
-  { id: 's4', name: 'Refill · Care', kr: '리필 · 관리',   price: 65000,  dur: '60min' },
-]
-
 type Picked = { y: number; m: number; d: number }
 
-function CalendarSection() {
-  const router = useRouter()
-  const today = new Date(2026, 4, 4)
-  const [view, setView] = useState({ y: 2026, m: 4 })
+function CalendarSection({ menus, onNeedLogin }: { menus: DbMenu[]; onNeedLogin: () => void }) {
+  const supabase = createClient()
+  const now = new Date()
+  const today = { y: now.getFullYear(), m: now.getMonth(), d: now.getDate() }
+
+  const [view, setView] = useState({ y: today.y, m: today.m })
   const [picked, setPicked] = useState<Picked | null>(null)
   const [slot, setSlot] = useState<string | null>(null)
-  const [service, setService] = useState('s1')
+  const [menuId, setMenuId] = useState<string>(menus[0]?.id ?? '')
+  const [submitting, setSubmitting] = useState(false)
+  const [bookingDone, setBookingDone] = useState(false)
+  const [bookingError, setBookingError] = useState<string | null>(null)
+
+  // menus prop이 바뀌면 첫 번째 메뉴로 초기화
+  useEffect(() => {
+    if (menus.length > 0 && !menuId) setMenuId(menus[0].id)
+  }, [menus, menuId])
 
   const days = useMemo(() => {
     const first = new Date(view.y, view.m, 1)
@@ -294,12 +310,13 @@ function CalendarSection() {
   const isAvailable = (d: number | null): boolean => {
     if (!d) return false
     const dt = new Date(view.y, view.m, d)
-    if (dt < new Date(today.getFullYear(), today.getMonth(), today.getDate())) return false
-    if (dt.getDay() === 0) return false
-    return d % 2 !== 0 || d % 3 === 0
+    const todayDate = new Date(today.y, today.m, today.d)
+    if (dt < todayDate) return false
+    if (dt.getDay() === 0) return false // 일요일 휴무
+    return true
   }
 
-  const isToday = (d: number) => d === today.getDate() && view.m === today.getMonth() && view.y === today.getFullYear()
+  const isToday = (d: number) => d === today.d && view.m === today.m && view.y === today.y
   const isPicked = (d: number) => !!picked && d === picked.d && picked.m === view.m && picked.y === view.y
 
   const moveMonth = (delta: number) => {
@@ -309,16 +326,43 @@ function CalendarSection() {
     setView({ y, m })
   }
 
-  const takenForDay = picked ? new Set(['12:30', '17:00'].slice(0, (picked.d % 3) + 1)) : new Set<string>()
-  const svc = SERVICES.find(s => s.id === service)!
+  const selectedMenu = menus.find(m => m.id === menuId) ?? menus[0]
   const labelDate = picked ? `${KOR_MONTH[picked.m]} ${String(picked.d).padStart(2, '0')}, ${picked.y}` : '— · —'
 
-  function handleConfirm() {
-    const params = new URLSearchParams()
-    if (picked) params.set('date', `${picked.y}-${String(picked.m + 1).padStart(2, '0')}-${String(picked.d).padStart(2, '0')}`)
-    if (slot) params.set('time', slot)
-    params.set('menu', svc.name)
-    router.push(`/customer/booking?${params.toString()}`)
+  async function handleConfirm() {
+    if (!picked || !slot || !selectedMenu) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { onNeedLogin(); return }
+
+    const dateStr = `${picked.y}-${String(picked.m + 1).padStart(2, '0')}-${String(picked.d).padStart(2, '0')}`
+    const startAt = `${dateStr}T${slot}:00+09:00`
+    const endMin = (selectedMenu.duration_min ?? 120)
+    const [h, min] = slot.split(':').map(Number)
+    const endTotal = h * 60 + min + endMin
+    const endH = String(Math.floor(endTotal / 60)).padStart(2, '0')
+    const endM = String(endTotal % 60).padStart(2, '0')
+    const endAt = `${dateStr}T${endH}:${endM}:00+09:00`
+
+    setSubmitting(true)
+    setBookingError(null)
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ menu_id: selectedMenu.id, start_at: startAt, end_at: endAt }),
+      })
+      if (res.status === 201) {
+        setBookingDone(true)
+      } else {
+        const json = await res.json()
+        setBookingError(json.error ?? '예약에 실패했습니다.')
+      }
+    } catch {
+      setBookingError('네트워크 오류가 발생했습니다.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const dayBtnStyle = (d: number): React.CSSProperties => ({
@@ -407,102 +451,142 @@ function CalendarSection() {
 
           {/* 오른쪽: 시간 + 메뉴 선택 */}
           <div>
-            <div>
-              <div style={{ fontFamily: V.display, fontSize: 28, color: V.ink, letterSpacing: '0.02em' }}>
-                {picked ? `${KOR_MONTH[picked.m]} ${picked.d}` : 'Choose a date'}
+            {bookingDone ? (
+              /* 예약 완료 상태 */
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', textAlign: 'center', padding: '40px 0' }}>
+                <div style={{ fontFamily: V.display, fontSize: 56, color: V.ink, letterSpacing: '0.04em', marginBottom: 16 }}>예약 완료</div>
+                <div style={{ width: 48, height: 1, background: V.line, margin: '0 auto 28px' }} />
+                <p style={{ fontFamily: V.sans, fontWeight: 400, fontSize: 14, color: V.ink3, lineHeight: 1.8, marginBottom: 36 }}>
+                  예약이 확정되었습니다.<br />변경이 필요하시면 마이페이지에서 확인하세요.
+                </p>
+                <button
+                  onClick={() => { setBookingDone(false); setPicked(null); setSlot(null) }}
+                  className="mute-btn outline"
+                  style={{ border: `1px solid ${V.line}`, background: 'transparent', color: V.ink }}
+                >
+                  다른 일정 예약하기
+                </button>
               </div>
-              <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.28em', color: V.ink3, textTransform: 'uppercase', marginTop: 6 }}>
-                {picked ? '시간 선택' : '왼쪽 캘린더에서 날짜를 선택하세요'}
-              </div>
-            </div>
-
-            {/* 시간 슬롯 */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 28 }}>
-              {TIME_SLOTS.map(t => {
-                const taken = takenForDay.has(t)
-                const selected = slot === t
-                return (
-                  <button
-                    key={t}
-                    disabled={!picked || taken}
-                    onClick={() => setSlot(t)}
-                    style={{
-                      padding: '14px 18px',
-                      border: `1px solid ${selected ? V.ink : V.lineSoft}`,
-                      background: selected ? V.ink : 'transparent',
-                      fontFamily: V.sans, fontSize: 13,
-                      color: taken ? V.ink3 : selected ? V.bgSoft : V.ink,
-                      letterSpacing: '0.1em', textAlign: 'center',
-                      textDecoration: taken ? 'line-through' : 'none',
-                      opacity: taken ? 0.4 : 1,
-                      cursor: (!picked || taken) ? 'not-allowed' : 'pointer',
-                      transition: 'all 200ms ease',
-                    }}
-                  >{t}</button>
-                )
-              })}
-            </div>
-
-            {/* 서비스 선택 */}
-            <div style={{ marginTop: 32 }}>
-              <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', marginBottom: 12 }}>시술 메뉴</div>
-              <div style={{ display: 'grid', gap: 8 }}>
-                {SERVICES.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setService(s.id)}
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '14px 18px',
-                      border: `1px solid ${service === s.id ? V.ink : V.lineSoft}`,
-                      background: service === s.id ? V.ink : 'transparent',
-                      color: service === s.id ? V.bgSoft : V.ink,
-                      fontFamily: V.serif,
-                      cursor: 'pointer',
-                      transition: 'all 200ms ease',
-                    }}
-                  >
-                    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: 16 }}>{s.name}</span>
-                      <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, fontWeight: 400, marginTop: 2 }}>{s.kr} · {s.dur}</span>
-                    </span>
-                    <span style={{ fontFamily: V.display, fontSize: 18 }}>
-                      ₩{s.price / 1000}<small style={{ fontFamily: V.sans, fontSize: 10, opacity: 0.7, marginLeft: 2 }}>K</small>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 요약 */}
-            <div style={{ marginTop: 40, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'grid', gap: 14 }}>
-              {[
-                { k: 'Date', v: labelDate, dim: !picked },
-                { k: 'Time', v: slot || '—', dim: !slot },
-                { k: 'Service', v: svc.name, dim: false },
-              ].map(({ k, v, dim }) => (
-                <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{k}</span>
-                  <span style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, fontStyle: dim ? 'italic' : 'normal', opacity: dim ? 0.5 : 1 }}>{v}</span>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontFamily: V.display, fontSize: 28, color: V.ink, letterSpacing: '0.02em' }}>
+                    {picked ? `${KOR_MONTH[picked.m]} ${picked.d}` : 'Choose a date'}
+                  </div>
+                  <div style={{ fontFamily: V.sans, fontSize: 11, letterSpacing: '0.28em', color: V.ink3, textTransform: 'uppercase', marginTop: 6 }}>
+                    {picked ? '시간 선택' : '왼쪽 캘린더에서 날짜를 선택하세요'}
+                  </div>
                 </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 14, borderTop: `1px solid ${V.lineSoft}`, marginTop: 6 }}>
-                <span style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>Total</span>
-                <span style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>₩{svc.price.toLocaleString()}</span>
-              </div>
-            </div>
 
-            <button
-              className="mute-btn"
-              onClick={handleConfirm}
-              style={{
-                width: '100%', justifyContent: 'center', marginTop: 28,
-                opacity: (picked && slot) ? 1 : 0.4,
-                pointerEvents: (picked && slot) ? 'auto' : 'none',
-              }}
-            >
-              예약 확정 <span className="material-symbols-outlined">arrow_forward</span>
-            </button>
+                {/* 시간 슬롯 */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 28 }}>
+                  {TIME_SLOTS.map(t => {
+                    const selected = slot === t
+                    return (
+                      <button
+                        key={t}
+                        disabled={!picked}
+                        onClick={() => setSlot(t)}
+                        style={{
+                          padding: '14px 18px',
+                          border: `1px solid ${selected ? V.ink : V.lineSoft}`,
+                          background: selected ? V.ink : 'transparent',
+                          fontFamily: V.sans, fontSize: 13,
+                          color: selected ? V.bgSoft : V.ink,
+                          letterSpacing: '0.1em', textAlign: 'center',
+                          opacity: !picked ? 0.3 : 1,
+                          cursor: !picked ? 'not-allowed' : 'pointer',
+                          transition: 'all 200ms ease',
+                        }}
+                      >{t}</button>
+                    )
+                  })}
+                </div>
+
+                {/* 시술 메뉴 선택 */}
+                <div style={{ marginTop: 32 }}>
+                  <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase', marginBottom: 12 }}>시술 메뉴</div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {menus.map(m => {
+                      const cat = getCategoryLabel(m.name)
+                      const isSelected = menuId === m.id
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => setMenuId(m.id)}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            padding: '14px 18px',
+                            border: `1px solid ${isSelected ? V.ink : V.lineSoft}`,
+                            background: isSelected ? V.ink : 'transparent',
+                            color: isSelected ? V.bgSoft : V.ink,
+                            fontFamily: V.serif,
+                            cursor: 'pointer',
+                            transition: 'all 200ms ease',
+                          }}
+                        >
+                          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: 16 }}>
+                              {m.name}
+                              {cat && (
+                                <span style={{ fontFamily: V.sans, fontSize: 11, fontWeight: 400, marginLeft: 8, opacity: isSelected ? 0.7 : 0.6 }}>
+                                  ({cat})
+                                </span>
+                              )}
+                            </span>
+                            <span style={{ fontFamily: V.sans, fontSize: 11, opacity: isSelected ? 0.7 : 0.6, fontWeight: 400, marginTop: 2 }}>
+                              {m.duration_min}min
+                            </span>
+                          </span>
+                          <span style={{ fontFamily: V.display, fontSize: 18 }}>
+                            ₩{Math.round(m.price / 1000)}<small style={{ fontFamily: V.sans, fontSize: 10, opacity: 0.7, marginLeft: 2 }}>K</small>
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* 오류 메시지 */}
+                {bookingError && (
+                  <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(180,40,40,0.06)', border: '1px solid rgba(180,40,40,0.2)', fontFamily: V.sans, fontSize: 13, color: '#B42828' }}>
+                    {bookingError}
+                  </div>
+                )}
+
+                {/* 요약 */}
+                <div style={{ marginTop: 40, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'grid', gap: 14 }}>
+                  {[
+                    { k: 'Date', v: labelDate, dim: !picked },
+                    { k: 'Time', v: slot || '—', dim: !slot },
+                    { k: 'Service', v: selectedMenu?.name ?? '—', dim: false },
+                  ].map(({ k, v, dim }) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{k}</span>
+                      <span style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, fontStyle: dim ? 'italic' : 'normal', opacity: dim ? 0.5 : 1 }}>{v}</span>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', paddingTop: 14, borderTop: `1px solid ${V.lineSoft}`, marginTop: 6 }}>
+                    <span style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>Total</span>
+                    <span style={{ fontFamily: V.display, fontSize: 22, color: V.ink }}>₩{(selectedMenu?.price ?? 0).toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <button
+                  className="mute-btn"
+                  onClick={handleConfirm}
+                  disabled={submitting}
+                  style={{
+                    width: '100%', justifyContent: 'center', marginTop: 28,
+                    opacity: (picked && slot && !submitting) ? 1 : 0.4,
+                    pointerEvents: (picked && slot && !submitting) ? 'auto' : 'none',
+                  }}
+                >
+                  {submitting ? '처리 중...' : '예약 확정'}
+                  {!submitting && <span className="material-symbols-outlined">arrow_forward</span>}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -858,14 +942,22 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 // ────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const [showLogin, setShowLogin] = useState(false)
+  const [menus, setMenus] = useState<DbMenu[]>([])
+
+  useEffect(() => {
+    fetch('/api/menus')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setMenus(data) })
+      .catch(() => {})
+  }, [])
 
   return (
     <div className="mute-body">
       <Nav onLogin={() => setShowLogin(true)} />
       <Hero />
-      <Menu />
+      <Menu menus={menus} />
       <QuoteBand />
-      <CalendarSection />
+      <CalendarSection menus={menus} onNeedLogin={() => setShowLogin(true)} />
       <Trend />
       <Location />
       <Footer />
