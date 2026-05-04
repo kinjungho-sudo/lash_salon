@@ -15,18 +15,14 @@ const playfair = Playfair_Display({
 })
 
 export const metadata: Metadata = {
-  title: '살롱 관리자',
-  description: '속눈썹펌 살롱 운영 관리 시스템',
+  title: 'MUTE EYELASH SALON',
+  description: 'MUTE Eyelash Salon — 속눈썹펌 살롱',
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="antialiased bg-[#0A0A0A] text-[#F5F0E8]">
+      <body className="antialiased">
         {children}
       </body>
     </html>

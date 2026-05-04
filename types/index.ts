@@ -15,6 +15,7 @@ export interface OwnerProfile {
 export interface Customer {
   id: string
   owner_id: string
+  user_id: string | null
   name: string
   phone: string | null
   district: string | null

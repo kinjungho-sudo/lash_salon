@@ -1,7 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const PUBLIC_PATHS = ['/login', '/signup', '/auth', '/privacy', '/api/auth']
+// 완전 공개 경로 (로그인 불필요)
+const PUBLIC_PATHS = ['/login', '/signup', '/auth', '/privacy', '/api/auth', '/']
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -11,9 +12,7 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           supabaseResponse = NextResponse.next({ request })
@@ -28,35 +27,55 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   const { pathname } = request.nextUrl
 
-  const isPublicPath = PUBLIC_PATHS.some(p => pathname.startsWith(p))
+  const isPublicPath = PUBLIC_PATHS.some(p => pathname === p || (p !== '/' && pathname.startsWith(p)))
 
-  // 비로그인 → 공개 경로 통과, 나머지는 /login 리다이렉트
+  // /admin/* — 관리자 전용
+  if (pathname.startsWith('/admin')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
+    // ADMIN_EMAIL 확인
+    const adminEmail = process.env.ADMIN_EMAIL
+    if (!adminEmail || user.email !== adminEmail) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('error', 'not_authorized')
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
+  // /customer/* — 로그인한 고객 전용
+  if (pathname.startsWith('/customer')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
+  // 공개 경로 — 통과
+  if (isPublicPath) {
+    // 이미 로그인된 상태에서 /login, /signup 접근 → 적절한 홈으로
+    if (user && (pathname === '/login' || pathname === '/signup')) {
+      const adminEmail = process.env.ADMIN_EMAIL
+      const url = request.nextUrl.clone()
+      url.pathname = user.email === adminEmail ? '/admin' : '/customer'
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
+  // 그 외 경로 — 로그인 필요
   if (!user) {
-    if (isPublicPath) return supabaseResponse
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // 로그인 상태 + 공개 경로 → 대시보드로
-  if (isPublicPath && pathname !== '/privacy') {
-    const dashboardUrl = request.nextUrl.clone()
-    dashboardUrl.pathname = '/'
-    return NextResponse.redirect(dashboardUrl)
-  }
-
-  // 공유 Supabase 인스턴스 보안: lash_salon_owner_profiles 존재 확인
-  const { data: ownerProfile } = await supabase
-    .from('lash_salon_owner_profiles')
-    .select('id')
-    .eq('id', user.id)
-    .single()
-
-  if (!ownerProfile) {
-    const loginUrl = request.nextUrl.clone()
-    loginUrl.pathname = '/login'
-    loginUrl.searchParams.set('error', 'not_authorized')
-    return NextResponse.redirect(loginUrl)
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse
