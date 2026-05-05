@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Booking, Customer, Menu } from '@/types'
-import { ChevronLeft, ChevronRight, Plus, X, Check, Loader2, AlertCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Check, Loader2, AlertCircle, Zap } from 'lucide-react'
 
 type BookingWithRels = Booking & {
   customer: { id: string; name: string; phone: string | null } | null
@@ -23,23 +23,43 @@ export default function AdminCalendarPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [menus, setMenus] = useState<Menu[]>([])
   const [loading, setLoading] = useState(true)
+  const [realtimeActive, setRealtimeActive] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState<BookingWithRels | null>(null)
+  const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({ customer_id: '', menu_id: '', date: '', start_hour: '10', start_min: '00' })
+  const [editForm, setEditForm] = useState({ menu_id: '', date: '', start_hour: '10', start_min: '00' })
 
   const supabase = createClient()
+  const viewDateRef = useRef(viewDate)
+  viewDateRef.current = viewDate
 
   const fetchBookings = useCallback(async () => {
+    const d = viewDateRef.current
     setLoading(true)
-    const res = await fetch(`/api/bookings?year=${viewDate.getFullYear()}&month=${viewDate.getMonth() + 1}`)
+    const res = await fetch(`/api/bookings?year=${d.getFullYear()}&month=${d.getMonth() + 1}`)
     const data = await res.json()
     setBookings(Array.isArray(data) ? data : [])
     setLoading(false)
-  }, [viewDate])
+  }, [])
 
-  useEffect(() => { fetchBookings() }, [fetchBookings])
+  useEffect(() => { fetchBookings() }, [viewDate, fetchBookings])
+
+  // Supabase Realtime — 예약 변경 실시간 반영
+  useEffect(() => {
+    const channel = supabase
+      .channel('lash-salon-bookings-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lash_salon_bookings' }, () => {
+        fetchBookings()
+      })
+      .subscribe((status) => {
+        setRealtimeActive(status === 'SUBSCRIBED')
+      })
+
+    return () => { supabase.removeChannel(channel) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     async function loadMeta() {
@@ -74,12 +94,50 @@ export default function AdminCalendarPage() {
     }
     setShowForm(false)
     setForm({ customer_id: '', menu_id: '', date: '', start_hour: '10', start_min: '00' })
-    await fetchBookings(); setSaving(false)
+    setSaving(false)
+    // Realtime이 자동 반영하지만 fallback으로 즉시 fetch
+    fetchBookings()
   }
 
   async function handleStatusChange(id: string, status: 'cancelled' | 'no_show') {
     await fetch(`/api/bookings/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) })
-    setSelectedBooking(null); await fetchBookings()
+    setSelectedBooking(null)
+  }
+
+  async function handleEditBooking() {
+    if (!selectedBooking || !editForm.menu_id || !editForm.date) { setError('메뉴와 날짜를 선택해 주세요.'); return }
+    setSaving(true); setError(null)
+    const menu = menus.find(m => m.id === editForm.menu_id)
+    const duration = menu?.duration_min ?? 120
+    const startAt = `${editForm.date}T${pad(parseInt(editForm.start_hour))}:${editForm.start_min}:00+09:00`
+    const endAt = new Date(new Date(startAt).getTime() + duration * 60 * 1000).toISOString()
+    const res = await fetch(`/api/bookings/${selectedBooking.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ menu_id: editForm.menu_id, start_at: startAt, end_at: endAt }),
+    })
+    if (!res.ok) {
+      const { error: msg } = await res.json()
+      setError(msg ?? '예약 수정에 실패했습니다.')
+      setSaving(false); return
+    }
+    setSelectedBooking(null); setEditMode(false); setSaving(false)
+    fetchBookings()
+  }
+
+  function openEdit(b: BookingWithRels) {
+    const dt = new Date(b.start_at)
+    const kstDate = toKSTDateString(dt)
+    const kstHour = new Date(b.start_at).toLocaleString('ko-KR', { hour: '2-digit', hour12: false, timeZone: 'Asia/Seoul' }).replace(/[^0-9]/g, '')
+    const kstMin = new Date(b.start_at).toLocaleString('ko-KR', { minute: '2-digit', timeZone: 'Asia/Seoul' }).padStart(2, '0')
+    setEditForm({
+      menu_id: b.menu?.id ?? '',
+      date: kstDate,
+      start_hour: kstHour || '10',
+      start_min: ['00', '30'].includes(kstMin) ? kstMin : '00',
+    })
+    setEditMode(true)
+    setError(null)
   }
 
   const year = viewDate.getFullYear()
@@ -102,7 +160,14 @@ export default function AdminCalendarPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-[#F5F0E8]" style={{ fontFamily: 'var(--font-playfair,serif)' }}>예약 캘린더</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-[#F5F0E8]" style={{ fontFamily: 'var(--font-playfair,serif)' }}>예약 캘린더</h1>
+            {realtimeActive && (
+              <span className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'rgba(45,74,62,0.3)', color: '#A8C5B8' }}>
+                <Zap size={9} /> 실시간
+              </span>
+            )}
+          </div>
           <p className="text-sm mt-1" style={{ color: 'rgba(245,240,232,0.4)' }}>예약 등록 및 관리</p>
         </div>
         <button onClick={() => { setShowForm(true); setSelectedBooking(null); setError(null) }}
@@ -158,8 +223,11 @@ export default function AdminCalendarPage() {
                 <div className="space-y-0.5">
                   {dayBookings.slice(0, 2).map(b => (
                     <div key={b.id} className="text-[10px] px-1 py-0.5 rounded truncate cursor-pointer"
-                      style={{ background: 'rgba(45,74,62,0.35)', color: '#A8C5B8' }}
-                      onClick={e => { e.stopPropagation(); setSelectedBooking(b) }}>
+                      style={{
+                        background: b.status === 'confirmed' ? 'rgba(45,74,62,0.35)' : 'rgba(100,100,100,0.2)',
+                        color: b.status === 'confirmed' ? '#A8C5B8' : 'rgba(245,240,232,0.3)',
+                      }}
+                      onClick={e => { e.stopPropagation(); setSelectedBooking(b); setEditMode(false) }}>
                       {new Date(b.start_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })} {b.customer?.name}
                     </div>
                   ))}
@@ -246,52 +314,115 @@ export default function AdminCalendarPage() {
         </div>
       )}
 
-      {/* 예약 상세 모달 */}
+      {/* 예약 상세/편집 모달 */}
       {selectedBooking && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
           <div className="w-full max-w-sm rounded-2xl p-6" style={{ background: '#2C2C2C', border: '1px solid rgba(255,255,255,0.1)' }}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-base font-semibold text-[#F5F0E8]">예약 상세</h2>
-              <button onClick={() => setSelectedBooking(null)}
+              <h2 className="text-base font-semibold text-[#F5F0E8]">
+                {editMode ? '예약 수정' : '예약 상세'}
+              </h2>
+              <button onClick={() => { setSelectedBooking(null); setEditMode(false); setError(null) }}
                 className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[rgba(255,255,255,0.06)]" style={{ color: 'rgba(245,240,232,0.4)' }}>
                 <X size={16} />
               </button>
             </div>
-            <div className="space-y-3 mb-5">
-              <div>
-                <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>고객</p>
-                <p className="text-sm font-medium text-[#F5F0E8]">{selectedBooking.customer?.name}</p>
-                {selectedBooking.customer?.phone && <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>{selectedBooking.customer.phone}</p>}
+
+            {error && (
+              <div className="mb-4 p-3 rounded-lg text-xs flex items-center gap-2" style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.2)', color: '#F87171' }}>
+                <AlertCircle size={13} /> {error}
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>시술</p>
-                <p className="text-sm text-[#F5F0E8]">{selectedBooking.menu?.name}</p>
+            )}
+
+            {editMode ? (
+              /* 편집 모드 */
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'rgba(245,240,232,0.4)' }}>고객</p>
+                  <p className="text-sm font-medium text-[#F5F0E8]">{selectedBooking.customer?.name}</p>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,240,232,0.5)' }}>시술 메뉴</label>
+                  <select value={editForm.menu_id} onChange={e => setEditForm(f => ({ ...f, menu_id: e.target.value }))}
+                    className="w-full h-10 px-3 rounded-lg text-sm input-luxury">
+                    <option value="">메뉴 선택</option>
+                    {menus.map(m => <option key={m.id} value={m.id}>{m.name} ({m.duration_min}분)</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,240,232,0.5)' }}>날짜</label>
+                  <input type="date" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))}
+                    className="w-full h-10 px-3 rounded-lg text-sm input-luxury" />
+                </div>
+                <div>
+                  <label className="block text-xs uppercase tracking-wider mb-1.5" style={{ color: 'rgba(245,240,232,0.5)' }}>시작 시간</label>
+                  <div className="flex gap-2">
+                    <select value={editForm.start_hour} onChange={e => setEditForm(f => ({ ...f, start_hour: e.target.value }))}
+                      className="flex-1 h-10 px-3 rounded-lg text-sm input-luxury">
+                      {HOURS.map(h => <option key={h} value={h}>{pad(h)}시</option>)}
+                    </select>
+                    <select value={editForm.start_min} onChange={e => setEditForm(f => ({ ...f, start_min: e.target.value }))}
+                      className="flex-1 h-10 px-3 rounded-lg text-sm input-luxury">
+                      {['00', '30'].map(m => <option key={m} value={m}>{m}분</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button onClick={() => { setEditMode(false); setError(null) }}
+                    className="flex-1 h-9 rounded-lg text-xs transition-colors" style={{ color: 'rgba(245,240,232,0.5)' }}>취소</button>
+                  <button onClick={handleEditBooking} disabled={saving}
+                    className="flex-1 h-9 rounded-lg text-xs font-semibold btn-green flex items-center justify-center gap-1.5 disabled:opacity-50">
+                    {saving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    {saving ? '저장 중...' : '수정 완료'}
+                  </button>
+                </div>
               </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>일시</p>
-                <p className="text-sm text-[#F5F0E8]">{new Date(selectedBooking.start_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                <p className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
-                  {new Date(selectedBooking.start_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })} ~ {new Date(selectedBooking.end_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>상태</p>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${selectedBooking.status === 'confirmed' ? 'bg-green-900/30 text-green-400' : selectedBooking.status === 'cancelled' ? 'bg-red-900/30 text-red-400' : 'bg-orange-900/30 text-orange-400'}`}>
-                  {selectedBooking.status === 'confirmed' ? '확정' : selectedBooking.status === 'cancelled' ? '취소' : '노쇼'}
-                </span>
-              </div>
-            </div>
-            {selectedBooking.status === 'confirmed' && (
-              <div className="flex gap-2">
-                <button onClick={() => handleStatusChange(selectedBooking.id, 'no_show')}
-                  className="flex-1 h-9 rounded-lg text-xs font-medium transition-colors" style={{ border: '1px solid rgba(251,146,60,0.3)', color: '#FB923C' }}>
-                  노쇼 처리
-                </button>
-                <button onClick={() => handleStatusChange(selectedBooking.id, 'cancelled')}
-                  className="flex-1 h-9 rounded-lg text-xs font-medium transition-colors" style={{ border: '1px solid rgba(248,113,113,0.3)', color: '#F87171' }}>
-                  예약 취소
-                </button>
-              </div>
+            ) : (
+              /* 보기 모드 */
+              <>
+                <div className="space-y-3 mb-5">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>고객</p>
+                    <p className="text-sm font-medium text-[#F5F0E8]">{selectedBooking.customer?.name}</p>
+                    {selectedBooking.customer?.phone && <p className="text-xs" style={{ color: 'rgba(245,240,232,0.4)' }}>{selectedBooking.customer.phone}</p>}
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>시술</p>
+                    <p className="text-sm text-[#F5F0E8]">{selectedBooking.menu?.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>일시</p>
+                    <p className="text-sm text-[#F5F0E8]">{new Date(selectedBooking.start_at).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    <p className="text-xs" style={{ color: 'rgba(245,240,232,0.5)' }}>
+                      {new Date(selectedBooking.start_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })} ~ {new Date(selectedBooking.end_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'rgba(245,240,232,0.4)' }}>상태</p>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${selectedBooking.status === 'confirmed' ? 'bg-green-900/30 text-green-400' : selectedBooking.status === 'cancelled' ? 'bg-red-900/30 text-red-400' : 'bg-orange-900/30 text-orange-400'}`}>
+                      {selectedBooking.status === 'confirmed' ? '확정' : selectedBooking.status === 'cancelled' ? '취소' : '노쇼'}
+                    </span>
+                  </div>
+                </div>
+                {selectedBooking.status === 'confirmed' && (
+                  <div className="space-y-2">
+                    <button onClick={() => openEdit(selectedBooking)}
+                      className="w-full h-9 rounded-lg text-xs font-medium transition-colors" style={{ border: '1px solid rgba(168,197,184,0.3)', color: '#A8C5B8' }}>
+                      예약 수정
+                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleStatusChange(selectedBooking.id, 'no_show')}
+                        className="flex-1 h-9 rounded-lg text-xs font-medium transition-colors" style={{ border: '1px solid rgba(251,146,60,0.3)', color: '#FB923C' }}>
+                        노쇼 처리
+                      </button>
+                      <button onClick={() => handleStatusChange(selectedBooking.id, 'cancelled')}
+                        className="flex-1 h-9 rounded-lg text-xs font-medium transition-colors" style={{ border: '1px solid rgba(248,113,113,0.3)', color: '#F87171' }}>
+                        예약 취소
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -311,7 +442,7 @@ export default function AdminCalendarPage() {
             {bookings.filter(b => b.status === 'confirmed').map(b => (
               <div key={b.id} className="rounded-xl px-5 py-4 flex items-center gap-4 cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors"
                 style={{ background: '#242424', border: '1px solid rgba(255,255,255,0.06)' }}
-                onClick={() => setSelectedBooking(b)}>
+                onClick={() => { setSelectedBooking(b); setEditMode(false) }}>
                 <div className="w-1 self-stretch rounded-full" style={{ background: b.menu?.color_tag ?? '#2D4A3E', minHeight: '36px' }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-[#F5F0E8]">{b.customer?.name}</p>

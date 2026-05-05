@@ -114,8 +114,8 @@ function BookingForm() {
         const json = await res.json()
         setError(json.error ?? '예약에 실패했습니다.')
       }
-    } catch {
-      setError('네트워크 오류가 발생했습니다.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '요청 실패')
     } finally {
       setLoading(false)
     }

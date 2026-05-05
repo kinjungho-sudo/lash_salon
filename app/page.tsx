@@ -358,11 +358,11 @@ function CalendarSection({ menus, onNeedLogin }: { menus: DbMenu[]; onNeedLogin:
       if (res.status === 201) {
         setBookingDone(true)
       } else {
-        const json = await res.json()
-        setBookingError(json.error ?? '예약에 실패했습니다.')
+        const json = await res.json().catch(() => ({}))
+        setBookingError(json.error ?? `서버 오류 (${res.status})`)
       }
-    } catch {
-      setBookingError('네트워크 오류가 발생했습니다.')
+    } catch (err) {
+      setBookingError(err instanceof Error ? err.message : '요청 실패')
     } finally {
       setSubmitting(false)
     }

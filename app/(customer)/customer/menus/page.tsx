@@ -11,12 +11,22 @@ export default async function CustomerMenusPage() {
     .limit(1)
     .single()
 
-  const { data: menus } = ownerProfile ? await supabase
+  const MENU_ORDER = ['클래식', '볼륨', '하이브리드']
+
+  const rawMenus = ownerProfile ? (await supabase
     .from('lash_salon_menus')
     .select('*')
     .eq('owner_id', ownerProfile.id)
-    .eq('is_active', true)
-    .order('price') : { data: [] }
+    .eq('is_active', true)).data : []
+
+  const menus = (rawMenus ?? []).sort((a, b) => {
+    const ai = MENU_ORDER.indexOf(a.name)
+    const bi = MENU_ORDER.indexOf(b.name)
+    if (ai === -1 && bi === -1) return a.name.localeCompare(b.name)
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
 
   return (
     <div>

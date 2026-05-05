@@ -7,9 +7,10 @@ import { createClient } from '@/lib/supabase/client'
 interface Props {
   size?: 'sm' | 'lg'
   variant?: 'cream' | 'white'
+  menuName?: string
 }
 
-export default function BookingButton({ size = 'sm', variant = 'cream' }: Props) {
+export default function BookingButton({ size = 'sm', variant = 'cream', menuName }: Props) {
   const [loggedIn, setLoggedIn] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -21,7 +22,11 @@ export default function BookingButton({ size = 'sm', variant = 'cream' }: Props)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleClick() {
-    router.push(loggedIn ? '/customer/booking' : '/login')
+    const bookingPath = menuName
+      ? `/customer/booking?menu=${encodeURIComponent(menuName)}`
+      : '/customer/booking'
+    const dest = loggedIn ? bookingPath : `/login?redirect=${encodeURIComponent(bookingPath)}`
+    router.push(dest)
   }
 
   const heightClass = size === 'lg' ? 'h-12 px-10 text-sm' : 'h-9 px-5 text-sm'
@@ -35,7 +40,7 @@ export default function BookingButton({ size = 'sm', variant = 'cream' }: Props)
       className={`${heightClass} rounded-xl font-semibold flex items-center transition-all hover:opacity-90 ${variant === 'cream' ? 'btn-cream' : ''}`}
       style={styleProps}
     >
-      예약하기
+      {menuName ? `${menuName} 예약하기` : '예약하기'}
     </button>
   )
 }
