@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 // 완전 공개 경로 (로그인 불필요)
-const PUBLIC_PATHS = ['/login', '/signup', '/auth', '/privacy', '/api/auth', '/']
+const PUBLIC_PATHS = ['/login', '/signup', '/auth', '/privacy', '/api/', '/']
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })

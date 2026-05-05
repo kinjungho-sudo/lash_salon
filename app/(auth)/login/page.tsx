@@ -13,37 +13,15 @@ const V = {
   sans: "var(--font-inter,'Inter',-apple-system,sans-serif)",
 }
 
-const fieldStyle: React.CSSProperties = {
-  fontFamily: V.sans, fontSize: 16, color: V.ink,
-  background: 'transparent', border: 'none',
-  borderBottom: `1px solid ${V.line}`,
-  padding: '10px 0', outline: 'none', width: '100%',
-}
-const labelStyle: React.CSSProperties = {
-  fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em',
-  color: V.ink3, textTransform: 'uppercase' as const, display: 'block', marginBottom: 6,
-}
-
 function LoginForm() {
   const searchParams = useSearchParams()
   const errorParam = searchParams.get('error')
-  const redirectTo = searchParams.get('redirect')
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(
     errorParam === 'not_authorized' ? '접근 권한이 없습니다.' : null
   )
   const supabase = createClient()
-
-  async function handleEmailLogin(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true); setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) { setError('이메일 또는 비밀번호가 올바르지 않습니다.'); setLoading(false); return }
-    window.location.href = redirectTo ?? '/auth/redirect'
-  }
 
   async function handleGoogleLogin() {
     setLoading(true); setError(null)
@@ -56,7 +34,6 @@ function LoginForm() {
 
   return (
     <div style={{ minHeight: '100vh', background: V.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
-      {/* 두 패널 레이아웃 */}
       <div style={{
         width: 'min(880px, 100%)', display: 'grid', gridTemplateColumns: '1fr 1fr',
         border: `1px solid ${V.lineSoft}`, background: V.bgSoft,
@@ -81,59 +58,34 @@ function LoginForm() {
           </div>
         </aside>
 
-        {/* 오른쪽 — 폼 */}
-        <div style={{ padding: '64px 56px' }}>
+        {/* 오른쪽 — 로그인 */}
+        <div style={{ padding: '64px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', color: V.ink3, textTransform: 'uppercase', marginBottom: 8 }}>Account</div>
-          <h3 style={{ fontFamily: V.display, fontSize: 36, color: V.ink, margin: '0 0 36px', letterSpacing: '0.02em' }}>로그인</h3>
+          <h3 style={{ fontFamily: V.display, fontSize: 36, color: V.ink, margin: '0 0 12px', letterSpacing: '0.02em' }}>로그인</h3>
+          <p style={{ fontFamily: V.sans, fontSize: 13, color: V.ink3, margin: '0 0 36px', lineHeight: 1.6 }}>
+            Google 계정으로 간편하게 로그인하세요.
+          </p>
 
           {error && (
-            <div style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(180,40,40,0.06)', border: '1px solid rgba(180,40,40,0.2)', fontFamily: V.sans, fontSize: 13, color: '#B42828' }}>
+            <div style={{ marginBottom: 24, padding: '12px 16px', background: 'rgba(180,40,40,0.06)', border: '1px solid rgba(180,40,40,0.2)', fontFamily: V.sans, fontSize: 13, color: '#B42828' }}>
               {error}
             </div>
           )}
 
-          <form onSubmit={handleEmailLogin}>
-            <div style={{ marginBottom: 22 }}>
-              <label style={labelStyle}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} required style={fieldStyle} />
-            </div>
-            <div style={{ marginBottom: 28 }}>
-              <label style={labelStyle}>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={fieldStyle} />
-            </div>
-            <button type="submit" disabled={loading} style={{
-              width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-              padding: '16px 28px', border: `1px solid ${V.ink}`, background: loading ? 'transparent' : V.ink,
-              color: loading ? V.ink : V.bgSoft, fontFamily: V.sans, fontSize: 12,
-              letterSpacing: '0.28em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer',
-              transition: 'all 200ms ease', opacity: loading ? 0.6 : 1,
-            }}>
-              {loading ? '로그인 중...' : '로그인'}
-              {!loading && <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>}
-            </button>
-          </form>
-
-          {/* 구분선 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '28px 0 20px', fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>
-            <span style={{ flex: 1, height: 1, background: V.line }} />
-            <span>or</span>
-            <span style={{ flex: 1, height: 1, background: V.line }} />
-          </div>
-
-          {/* Google 로그인 */}
           <button onClick={handleGoogleLogin} disabled={loading} style={{
-            width: '100%', padding: '14px', border: `1px solid ${V.line}`, background: 'transparent',
-            fontFamily: V.sans, fontSize: 11, letterSpacing: '0.2em', color: V.ink,
-            textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-            cursor: 'pointer', transition: 'all 200ms ease',
+            width: '100%', padding: '16px', border: `1px solid ${V.ink}`, background: V.ink,
+            fontFamily: V.sans, fontSize: 12, letterSpacing: '0.2em', color: V.bgSoft,
+            textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+            cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 200ms ease',
+            opacity: loading ? 0.6 : 1,
           }}>
-            <svg width="16" height="16" viewBox="0 0 18 18">
+            <svg width="18" height="18" viewBox="0 0 18 18">
               <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
               <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
               <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
               <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
             </svg>
-            Google로 계속하기
+            {loading ? '로그인 중...' : 'Google로 로그인'}
           </button>
 
           <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
