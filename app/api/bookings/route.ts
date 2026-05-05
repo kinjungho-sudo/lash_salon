@@ -41,13 +41,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '필수 항목이 누락되었습니다.' }, { status: 400 })
   }
 
-  // 관리자 이메일로 owner profile 조회 (service role 사용)
-  const adminEmail = process.env.ADMIN_EMAIL
-  const { data: authList } = await serviceSupabase.auth.admin.listUsers()
-  const adminUser = authList?.users?.find(u => u.email === adminEmail)
-  if (!adminUser) return NextResponse.json({ error: '관리자 설정이 필요합니다.' }, { status: 500 })
+  // owner profile 조회 — lash_salon_owner_profiles 테이블에서 첫 번째 레코드를 owner로 사용
+  const { data: ownerProfile, error: ownerError } = await serviceSupabase
+    .from('lash_salon_owner_profiles')
+    .select('id')
+    .limit(1)
+    .single()
+  if (ownerError || !ownerProfile) {
+    return NextResponse.json({ error: '관리자 설정이 필요합니다.' }, { status: 500 })
+  }
 
-  const ownerId = adminUser.id
+  const ownerId = ownerProfile.id
 
   // 고객 레코드 확인 또는 생성 (service role로 RLS 우회)
   let { data: customerRecord } = await serviceSupabase
