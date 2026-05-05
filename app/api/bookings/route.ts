@@ -80,27 +80,30 @@ export async function POST(request: NextRequest) {
     .eq('id', ownerId)
     .single()
 
-  // GCal 연동된 경우 freebusy 검증
+  // GCal 연동된 경우 freebusy 검증 (실패해도 예약 진행)
   if (profile?.gcal_access_token && profile?.gcal_refresh_token && profile?.google_calendar_id) {
-    const { available, newTokens } = await isSlotAvailable(
-      profile.gcal_access_token,
-      profile.gcal_refresh_token,
-      profile.gcal_token_expires_at,
-      profile.google_calendar_id,
-      start_at,
-      end_at
-    )
+    try {
+      const { available, newTokens } = await isSlotAvailable(
+        profile.gcal_access_token,
+        profile.gcal_refresh_token,
+        profile.gcal_token_expires_at,
+        profile.google_calendar_id,
+        start_at,
+        end_at
+      )
 
-    // 토큰 갱신된 경우 저장
-    if (newTokens) {
-      await serviceSupabase.from('lash_salon_owner_profiles').update({
-        gcal_access_token: newTokens.access_token,
-        gcal_token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
-      }).eq('id', ownerId)
-    }
+      if (newTokens) {
+        await serviceSupabase.from('lash_salon_owner_profiles').update({
+          gcal_access_token: newTokens.access_token,
+          gcal_token_expires_at: newTokens.expiry_date ? new Date(newTokens.expiry_date).toISOString() : null,
+        }).eq('id', ownerId)
+      }
 
-    if (!available) {
-      return NextResponse.json({ error: 'Google Calendar에 해당 시간대에 이미 일정이 있습니다.' }, { status: 409 })
+      if (!available) {
+        return NextResponse.json({ error: 'Google Calendar에 해당 시간대에 이미 일정이 있습니다.' }, { status: 409 })
+      }
+    } catch {
+      // GCal 연동 오류는 예약 자체를 막지 않음
     }
   }
 
