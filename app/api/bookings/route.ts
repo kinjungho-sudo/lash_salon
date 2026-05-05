@@ -125,6 +125,9 @@ export async function POST(request: NextRequest) {
     if (insertError.code === '23505') {
       return NextResponse.json({ error: '해당 시간에 이미 예약이 있습니다.' }, { status: 409 })
     }
+    if (insertError.code === '23503') {
+      return NextResponse.json({ error: '선택한 메뉴가 유효하지 않습니다.' }, { status: 400 })
+    }
     return NextResponse.json({ error: insertError.message }, { status: 500 })
   }
 
