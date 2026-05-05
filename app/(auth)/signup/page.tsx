@@ -5,10 +5,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 const V = {
-  bg: '#E9E2D2', bgSoft: '#F2ECDD', ink: '#1A2A1C', ink2: '#2A3A2C',
-  ink3: '#4A5A44', line: '#C9BFA6', lineSoft: '#D9CFB8',
+  bg: '#E9E2D2', bgSoft: '#F2ECDD', ink: '#2A3A2C', ink2: '#3F4F3A',
+  ink3: '#6B7363', line: '#C9BFA6', lineSoft: '#D9CFB8',
   display: "var(--font-italiana,'Italiana','Cormorant Garamond',serif)",
   serifItalic: "var(--font-cormorant-italic,'Cormorant',serif)",
+  serif: "var(--font-cormorant,'Cormorant Garamond',serif)",
   sans: "var(--font-inter,'Inter',-apple-system,sans-serif)",
 }
 
@@ -23,7 +24,7 @@ export default function SignupPage() {
   const allRequired = consentPrivacy && consentTerms
 
   async function handleGoogleSignup() {
-    if (!allRequired) { setError('개인정보처리방침 및 이용약관에 동의해 주세요.'); return }
+    if (!allRequired) { setError('이용약관 및 개인정보처리방침에 동의해 주세요.'); return }
     setLoading(true); setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -33,44 +34,51 @@ export default function SignupPage() {
   }
 
   function handleToggleAll(checked: boolean) {
-    setConsentPrivacy(checked)
-    setConsentTerms(checked)
-    setConsentMarketing(checked)
+    setConsentPrivacy(checked); setConsentTerms(checked); setConsentMarketing(checked)
   }
 
   return (
     <div style={{ minHeight: '100vh', background: V.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{
-        width: 'min(880px, 100%)', display: 'grid', gridTemplateColumns: '1fr 1fr',
-        border: `1px solid ${V.lineSoft}`, background: V.bgSoft,
+        width: 'min(960px, 100%)',
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        background: V.bgSoft, border: `1px solid ${V.lineSoft}`,
+        boxShadow: '0 24px 80px rgba(42,58,44,0.12)',
       }}>
-        {/* 왼쪽 패널 */}
+        {/* 왼쪽 — 브랜드 패널 */}
         <aside style={{
           background: V.ink, color: V.bgSoft, padding: '64px 48px',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          position: 'relative', overflow: 'hidden',
         }}>
           <div>
-            <Link href="/" style={{ fontFamily: V.display, fontSize: 28, letterSpacing: '0.2em', color: V.bgSoft, textDecoration: 'none' }}>MUTE</Link>
-            <div style={{ fontFamily: V.sans, fontSize: 9, letterSpacing: '0.4em', opacity: 0.5, textTransform: 'uppercase', marginTop: 4 }}>Eyelash · Est. 2023</div>
-            <h2 style={{ fontFamily: V.display, fontSize: 52, lineHeight: 1, letterSpacing: '0.02em', margin: '40px 0 20px' }}>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.6)', marginBottom: 4 }}>Members · MUTE</div>
+            <Link href="/" style={{ fontFamily: V.display, fontSize: 32, letterSpacing: '0.15em', color: V.bgSoft, textDecoration: 'none', display: 'block', marginTop: 8 }}>MUTE</Link>
+            <h2 style={{ fontFamily: V.display, fontSize: 56, lineHeight: 1, letterSpacing: '0.02em', margin: '24px 0 18px', color: V.bgSoft }}>
               Join<br />us.
             </h2>
-            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.7, color: 'rgba(242,236,221,0.8)', margin: 0 }}>
+            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.6, color: 'rgba(242,236,221,0.75)', margin: 0 }}>
               &ldquo;한 사람을 위한,<br />단 하나의 디자인.&rdquo;
             </p>
           </div>
-          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.45, textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: 'rgba(242,236,221,0.5)', textTransform: 'uppercase' }}>
             Member benefits · 시술 5% 적립 · 우선 예약
           </div>
         </aside>
 
-        {/* 오른쪽 — 가입 */}
+        {/* 오른쪽 — 회원가입 */}
         <div style={{ padding: '64px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', color: V.ink3, textTransform: 'uppercase', marginBottom: 8 }}>New Account</div>
-          <h3 style={{ fontFamily: V.display, fontSize: 36, color: V.ink, margin: '0 0 12px', letterSpacing: '0.02em' }}>회원가입</h3>
-          <p style={{ fontFamily: V.sans, fontSize: 13, color: V.ink3, margin: '0 0 32px', lineHeight: 1.6 }}>
-            Google 계정으로 간편하게 가입하세요.
-          </p>
+          {/* 탭 */}
+          <div style={{ display: 'flex', gap: 32, borderBottom: `1px solid ${V.line}`, marginBottom: 36 }}>
+            <Link href="/login" style={{
+              fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3,
+              textTransform: 'uppercase', paddingBottom: 14, textDecoration: 'none',
+            }}>로그인</Link>
+            <span style={{
+              fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink,
+              textTransform: 'uppercase', paddingBottom: 14, borderBottom: `1px solid ${V.ink}`, marginBottom: -1,
+            }}>회원가입</span>
+          </div>
 
           {error && (
             <div style={{ marginBottom: 24, padding: '12px 16px', background: 'rgba(180,40,40,0.06)', border: '1px solid rgba(180,40,40,0.2)', fontFamily: V.sans, fontSize: 13, color: '#B42828' }}>
@@ -79,17 +87,16 @@ export default function SignupPage() {
           )}
 
           {/* 동의 섹션 */}
-          <div style={{ paddingBottom: 24, borderBottom: `1px solid ${V.lineSoft}`, marginBottom: 28, display: 'grid', gap: 12 }}>
-
+          <div style={{ marginBottom: 28, display: 'grid', gap: 16 }}>
             {/* 전체 동의 */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', padding: '12px 0', borderBottom: `1px solid ${V.lineSoft}` }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', paddingBottom: 16, borderBottom: `1px solid ${V.lineSoft}` }}>
               <input
                 type="checkbox"
                 checked={consentPrivacy && consentTerms && consentMarketing}
                 onChange={e => handleToggleAll(e.target.checked)}
-                style={{ accentColor: V.ink, width: 16, height: 16 }}
+                style={{ accentColor: V.ink, width: 15, height: 15 }}
               />
-              <span style={{ fontFamily: V.sans, fontSize: 12, color: V.ink, fontWeight: 600, letterSpacing: '0.05em' }}>
+              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink, fontWeight: 600, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
                 전체 동의
               </span>
             </label>
@@ -97,57 +104,47 @@ export default function SignupPage() {
             {/* 개인정보처리방침 */}
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
               <input
-                type="checkbox"
-                checked={consentPrivacy}
+                type="checkbox" checked={consentPrivacy}
                 onChange={e => setConsentPrivacy(e.target.checked)}
                 style={{ marginTop: 2, accentColor: V.ink, width: 14, height: 14 }}
               />
-              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, lineHeight: 1.6 }}>
+              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, lineHeight: 1.6, letterSpacing: '0.05em' }}>
                 <span style={{ color: '#B42828', fontWeight: 600 }}>[필수] </span>
-                <Link href="/privacy" target="_blank" style={{ color: V.ink2, borderBottom: `1px solid ${V.line}`, textDecoration: 'none' }}>
-                  개인정보처리방침
-                </Link>
-                에 동의합니다.
+                <Link href="/privacy" target="_blank" style={{ color: V.ink2, borderBottom: `1px solid ${V.line}`, textDecoration: 'none' }}>개인정보처리방침</Link>에 동의합니다.
               </span>
             </label>
 
             {/* 이용약관 */}
             <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
               <input
-                type="checkbox"
-                checked={consentTerms}
+                type="checkbox" checked={consentTerms}
                 onChange={e => setConsentTerms(e.target.checked)}
                 style={{ marginTop: 2, accentColor: V.ink, width: 14, height: 14 }}
               />
-              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, lineHeight: 1.6 }}>
+              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, lineHeight: 1.6, letterSpacing: '0.05em' }}>
                 <span style={{ color: '#B42828', fontWeight: 600 }}>[필수] </span>
-                <Link href="/terms" target="_blank" style={{ color: V.ink2, borderBottom: `1px solid ${V.line}`, textDecoration: 'none' }}>
-                  이용약관
-                </Link>
-                에 동의합니다.
+                <Link href="/terms" target="_blank" style={{ color: V.ink2, borderBottom: `1px solid ${V.line}`, textDecoration: 'none' }}>이용약관</Link>에 동의합니다.
               </span>
             </label>
 
-            {/* 마케팅 동의 */}
+            {/* 마케팅 */}
             <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
               <input
-                type="checkbox"
-                checked={consentMarketing}
+                type="checkbox" checked={consentMarketing}
                 onChange={e => setConsentMarketing(e.target.checked)}
                 style={{ accentColor: V.ink, width: 14, height: 14 }}
               />
-              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
-                <span style={{ color: V.ink3, fontWeight: 500 }}>[선택] </span>
-                마케팅 정보 수신에 동의합니다.
+              <span style={{ fontFamily: V.sans, fontSize: 11, color: V.ink3, letterSpacing: '0.05em' }}>
+                <span style={{ fontWeight: 500 }}>[선택] </span>마케팅 정보 수신에 동의합니다.
               </span>
             </label>
           </div>
 
           {/* Google 가입 버튼 */}
           <button onClick={handleGoogleSignup} disabled={loading || !allRequired} style={{
-            width: '100%', padding: '16px', border: `1px solid ${allRequired ? V.ink : V.line}`,
+            width: '100%', padding: '16px', border: `1px solid ${allRequired ? V.ink : V.lineSoft}`,
             background: allRequired ? V.ink : 'transparent',
-            fontFamily: V.sans, fontSize: 12, letterSpacing: '0.2em',
+            fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em',
             color: allRequired ? V.bgSoft : V.ink3,
             textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
             cursor: (loading || !allRequired) ? 'not-allowed' : 'pointer',

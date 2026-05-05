@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 const V = {
-  bg: '#E9E2D2', bgSoft: '#F2ECDD', ink: '#1A2A1C', ink2: '#2A3A2C',
-  ink3: '#4A5A44', line: '#C9BFA6', lineSoft: '#D9CFB8',
+  bg: '#E9E2D2', bgSoft: '#F2ECDD', ink: '#2A3A2C', ink2: '#3F4F3A',
+  ink3: '#6B7363', line: '#C9BFA6', lineSoft: '#D9CFB8',
   display: "var(--font-italiana,'Italiana','Cormorant Garamond',serif)",
   serifItalic: "var(--font-cormorant-italic,'Cormorant',serif)",
+  serif: "var(--font-cormorant,'Cormorant Garamond',serif)",
   sans: "var(--font-inter,'Inter',-apple-system,sans-serif)",
 }
 
@@ -35,36 +36,45 @@ function LoginForm() {
   return (
     <div style={{ minHeight: '100vh', background: V.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{
-        width: 'min(880px, 100%)', display: 'grid', gridTemplateColumns: '1fr 1fr',
-        border: `1px solid ${V.lineSoft}`, background: V.bgSoft,
+        width: 'min(960px, 100%)',
+        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        background: V.bgSoft, border: `1px solid ${V.lineSoft}`,
+        boxShadow: '0 24px 80px rgba(42,58,44,0.12)',
       }}>
         {/* 왼쪽 — 브랜드 패널 */}
         <aside style={{
           background: V.ink, color: V.bgSoft, padding: '64px 48px',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          position: 'relative', overflow: 'hidden',
         }}>
           <div>
-            <Link href="/" style={{ fontFamily: V.display, fontSize: 28, letterSpacing: '0.2em', color: V.bgSoft, textDecoration: 'none' }}>MUTE</Link>
-            <div style={{ fontFamily: V.sans, fontSize: 9, letterSpacing: '0.4em', opacity: 0.5, textTransform: 'uppercase', marginTop: 4 }}>Eyelash · Est. 2023</div>
-            <h2 style={{ fontFamily: V.display, fontSize: 52, lineHeight: 1, letterSpacing: '0.02em', margin: '40px 0 20px' }}>
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.6)', marginBottom: 4 }}>Members · MUTE</div>
+            <Link href="/" style={{ fontFamily: V.display, fontSize: 32, letterSpacing: '0.15em', color: V.bgSoft, textDecoration: 'none', display: 'block', marginTop: 8 }}>MUTE</Link>
+            <h2 style={{ fontFamily: V.display, fontSize: 56, lineHeight: 1, letterSpacing: '0.02em', margin: '24px 0 18px', color: V.bgSoft }}>
               Welcome<br />back.
             </h2>
-            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.7, color: 'rgba(242,236,221,0.8)', margin: 0 }}>
+            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.6, color: 'rgba(242,236,221,0.75)', margin: 0 }}>
               &ldquo;한 사람의 시선을 기억하는 일,<br />그것이 우리의 시작입니다.&rdquo;
             </p>
           </div>
-          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', opacity: 0.45, textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: 'rgba(242,236,221,0.5)', textTransform: 'uppercase' }}>
             Member benefits · 시술 5% 적립 · 우선 예약
           </div>
         </aside>
 
         {/* 오른쪽 — 로그인 */}
         <div style={{ padding: '64px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', color: V.ink3, textTransform: 'uppercase', marginBottom: 8 }}>Account</div>
-          <h3 style={{ fontFamily: V.display, fontSize: 36, color: V.ink, margin: '0 0 12px', letterSpacing: '0.02em' }}>로그인</h3>
-          <p style={{ fontFamily: V.sans, fontSize: 13, color: V.ink3, margin: '0 0 36px', lineHeight: 1.6 }}>
-            Google 계정으로 간편하게 로그인하세요.
-          </p>
+          {/* 탭 */}
+          <div style={{ display: 'flex', gap: 32, borderBottom: `1px solid ${V.line}`, marginBottom: 36 }}>
+            <span style={{
+              fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink,
+              textTransform: 'uppercase', paddingBottom: 14, borderBottom: `1px solid ${V.ink}`, marginBottom: -1,
+            }}>로그인</span>
+            <Link href="/signup" style={{
+              fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: V.ink3,
+              textTransform: 'uppercase', paddingBottom: 14, textDecoration: 'none',
+            }}>회원가입</Link>
+          </div>
 
           {error && (
             <div style={{ marginBottom: 24, padding: '12px 16px', background: 'rgba(180,40,40,0.06)', border: '1px solid rgba(180,40,40,0.2)', fontFamily: V.sans, fontSize: 13, color: '#B42828' }}>
@@ -72,9 +82,14 @@ function LoginForm() {
             </div>
           )}
 
+          <p style={{ fontFamily: V.serif, fontSize: 16, color: V.ink3, margin: '0 0 36px', lineHeight: 1.6 }}>
+            Google 계정으로 간편하게 로그인하세요.
+          </p>
+
+          {/* Google 로그인 버튼 */}
           <button onClick={handleGoogleLogin} disabled={loading} style={{
             width: '100%', padding: '16px', border: `1px solid ${V.ink}`, background: V.ink,
-            fontFamily: V.sans, fontSize: 12, letterSpacing: '0.2em', color: V.bgSoft,
+            fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.bgSoft,
             textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
             cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 200ms ease',
             opacity: loading ? 0.6 : 1,
@@ -88,13 +103,31 @@ function LoginForm() {
             {loading ? '로그인 중...' : 'Google로 로그인'}
           </button>
 
-          <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
-            <Link href="/signup" style={{ color: V.ink, borderBottom: `1px solid ${V.ink}`, textDecoration: 'none', letterSpacing: '0.1em', paddingBottom: 2 }}>
-              회원가입
-            </Link>
-            <Link href="/" style={{ color: V.ink3, textDecoration: 'none', letterSpacing: '0.1em' }}>
-              ← 홈으로
-            </Link>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 14,
+            margin: '32px 0 20px', color: V.ink3,
+            fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
+          }}>
+            <span style={{ flex: 1, height: 1, background: V.line }}/>
+            <span>or</span>
+            <span style={{ flex: 1, height: 1, background: V.line }}/>
+          </div>
+
+          {/* 소셜 버튼 영역 — 현재 Google만 지원 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
+            <button disabled style={{
+              padding: '14px', border: `1px solid ${V.lineSoft}`, background: 'transparent',
+              fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink3,
+              textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center',
+              opacity: 0.4, cursor: 'not-allowed',
+            }}>
+              Kakao · Naver 로그인 준비 중
+            </button>
+          </div>
+
+          <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'flex', justifyContent: 'space-between', fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
+            <Link href="/signup" style={{ color: V.ink, borderBottom: `1px solid ${V.ink}`, textDecoration: 'none', letterSpacing: '0.1em', paddingBottom: 2 }}>회원가입</Link>
+            <Link href="/" style={{ color: V.ink3, textDecoration: 'none', letterSpacing: '0.1em' }}>← 홈으로</Link>
           </div>
         </div>
       </div>
@@ -106,7 +139,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div style={{ minHeight: '100vh', background: '#E9E2D2', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontFamily: "var(--font-inter,'Inter',sans-serif)", fontSize: 12, letterSpacing: '0.3em', color: '#4A5A44', textTransform: 'uppercase' }}>Loading…</div>
+        <div style={{ fontFamily: "var(--font-inter,'Inter',sans-serif)", fontSize: 10, letterSpacing: '0.3em', color: '#6B7363', textTransform: 'uppercase' }}>Loading…</div>
       </div>
     }>
       <LoginForm />
