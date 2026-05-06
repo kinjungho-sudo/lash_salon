@@ -47,24 +47,31 @@ export async function GET(request: NextRequest) {
     .maybeSingle()
 
   if (ownerProfile) {
-    // 고객 레코드 자동 생성
+    // 기존 고객 여부 확인
     const { data: existingCustomer } = await serviceSupabase
       .from('lash_salon_customers')
-      .select('id')
+      .select('id, name, district')
       .eq('user_id', user.id)
       .maybeSingle()
 
     if (!existingCustomer) {
-      const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
+      // 신규 — 고객 레코드를 미완성 상태로 생성 후 온보딩으로 이동
+      const googleName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? ''
       await serviceSupabase.from('lash_salon_customers').insert({
         owner_id: ownerProfile.id,
         user_id: user.id,
-        name: userName,
-        phone: user.user_metadata?.phone ?? null,
+        name: googleName,
+        phone: null,
       })
+      return NextResponse.redirect(`${origin}/customer/onboarding`)
+    }
+
+    // 기존 고객이지만 지역 정보 미입력 시 온보딩으로
+    if (!existingCustomer.district) {
+      return NextResponse.redirect(`${origin}/customer/onboarding`)
     }
   }
 
-  // 로그인은 항상 고객 페이지로 — 관리자는 /admin 직접 접근
+  // 기존 고객 — 바로 마이페이지로
   return NextResponse.redirect(`${origin}/customer`)
 }
