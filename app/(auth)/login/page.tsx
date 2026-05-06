@@ -28,7 +28,7 @@ function LoginForm() {
     setLoading(true); setError(null)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
+      options: { redirectTo: window.location.origin + '/auth/callback?from=login' },
     })
     if (error) { setError('Google 로그인에 실패했습니다.'); setLoading(false) }
   }
@@ -83,7 +83,7 @@ function LoginForm() {
           )}
 
           <p style={{ fontFamily: V.serif, fontSize: 16, color: V.ink3, margin: '0 0 36px', lineHeight: 1.6 }}>
-            Google 계정으로 간편하게 로그인하세요.
+            이미 회원이신가요? Google 계정으로 로그인하세요.
           </p>
 
           {/* Google 로그인 버튼 */}
