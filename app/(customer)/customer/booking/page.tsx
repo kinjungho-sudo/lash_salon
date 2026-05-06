@@ -259,12 +259,15 @@ function BookingForm() {
           })}
         </div>
 
-        <div style={{ display: 'flex', gap: 24, marginTop: 28, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink3, textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', gap: 20, marginTop: 28, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.2em', color: V.ink3, textTransform: 'uppercase', flexWrap: 'wrap' }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: V.gold, display: 'inline-block' }} />예약 가능
           </span>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: V.ink, display: 'inline-block' }} />선택됨
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: V.bgPaper, border: `1px solid ${V.lineSoft}`, display: 'inline-block' }} />마감
           </span>
           <span style={{ opacity: 0.5 }}>일요일 휴무</span>
         </div>
