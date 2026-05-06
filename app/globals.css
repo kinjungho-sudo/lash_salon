@@ -1,3 +1,255 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+:root {
+  /* ── MUTE Landing 디자인 토큰 ── */
+  --mute-bg: #E9E2D2;
+  --mute-bg-soft: #F2ECDD;
+  --mute-bg-paper: #EFE7D2;
+  --mute-ink: #1A2A1C;        /* 강화: #2A3A2C → #1A2A1C */
+  --mute-ink-2: #2A3A2C;      /* 강화: #3F4F3A → #2A3A2C */
+  --mute-ink-3: #4A5A44;      /* 강화: #6B7363 → #4A5A44 */
+  --mute-line: #C9BFA6;
+  --mute-line-soft: #D9CFB8;
+  --mute-gold: #7A6440;       /* 강화: #9B8559 → #7A6440 */
+
+  --mute-serif: var(--font-cormorant), 'Cormorant Garamond', serif;
+  --mute-serif-italic: var(--font-cormorant-italic), 'Cormorant', serif;
+  --mute-display: var(--font-italiana), 'Italiana', 'Cormorant Garamond', serif;
+  --mute-kr: var(--font-noto-serif-kr), 'Noto Serif KR', serif;
+  --mute-sans: var(--font-inter), 'Inter', -apple-system, sans-serif;
+}
+
+/* Material Symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: 300;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ── MUTE Landing 전용 스타일 ── */
+.mute-body {
+  background: var(--mute-bg);
+  color: var(--mute-ink);
+  font-family: var(--mute-serif);
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+.mute-shell { max-width: 1440px; margin: 0 auto; padding: 0 56px; }
+.mute-section { padding: 120px 0; position: relative; }
+.mute-section-soft { background: var(--mute-bg-soft); }
+.mute-section-paper { background: var(--mute-bg-paper); }
+.mute-section-ink { background: var(--mute-ink); color: var(--mute-bg-soft); }
+
+.mute-eyebrow {
+  font-family: var(--mute-sans);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--mute-ink-3);
+}
+
+.mute-btn {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 16px 28px;
+  border: 1px solid var(--mute-ink);
+  background: var(--mute-ink);
+  color: var(--mute-bg-soft);
+  font-family: var(--mute-sans);
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+.mute-btn:hover { background: transparent; color: var(--mute-ink); }
+.mute-btn.outline { background: transparent; color: var(--mute-ink); }
+.mute-btn.outline:hover { background: var(--mute-ink); color: var(--mute-bg-soft); }
+
+.mute-link {
+  font-family: var(--mute-sans);
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--mute-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--mute-ink);
+  padding-bottom: 4px;
+  transition: gap 200ms ease;
+  text-decoration: none;
+}
+.mute-link:hover { gap: 14px; }
+
+@media (max-width: 960px) {
+  .mute-shell { padding: 0 24px; }
+}
+
+:root {
+  /* MUTE Brand Colors */
+  --green: #2D4A3E;
+  --green-light: #3D6354;
+  --green-dark: #1E3229;
+  --cream: #F5F0E8;
+  --cream-muted: rgba(245, 240, 232, 0.6);
+  --cream-subtle: rgba(245, 240, 232, 0.35);
+  --bg-dark: #1C1C1C;
+  --bg-darker: #141414;
+  --bg-card: #242424;
+  --bg-hover: #2C2C2C;
+  --border-green: rgba(45, 74, 62, 0.6);
+  --border-subtle: rgba(245, 240, 232, 0.1);
+  --text-primary: #F5F0E8;
+  --text-secondary: rgba(245, 240, 232, 0.6);
+  --text-muted: rgba(245, 240, 232, 0.35);
+  --sidebar-width: 240px;
+
+  /* Customer side light palette */
+  --bg-light: #FAFAF8;
+  --bg-light-card: #FFFFFF;
+  --text-dark: #1C1C1C;
+  --text-dark-muted: rgba(28, 28, 28, 0.55);
+
+  /* shadcn/ui tokens */
+  --background: 0 0% 11%;
+  --foreground: 40 30% 95%;
+  --card: 0 0% 14%;
+  --card-foreground: 40 30% 95%;
+  --popover: 0 0% 14%;
+  --popover-foreground: 40 30% 95%;
+  --primary: 158 25% 23%;
+  --primary-foreground: 40 30% 95%;
+  --secondary: 0 0% 16%;
+  --secondary-foreground: 40 30% 95%;
+  --muted: 0 0% 18%;
+  --muted-foreground: 40 20% 50%;
+  --accent: 0 0% 16%;
+  --accent-foreground: 40 30% 95%;
+  --destructive: 0 63% 50%;
+  --destructive-foreground: 40 30% 95%;
+  --border: 158 15% 20%;
+  --input: 158 10% 18%;
+  --ring: 158 25% 35%;
+  --radius: 0.5rem;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* MUTE 그린 버튼 (관리자) */
+.btn-green {
+  background: var(--green);
+  color: var(--cream);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-green:hover {
+  background: var(--green-light);
+  transform: translateY(-1px);
+}
+
+/* 크림 버튼 (고객 페이지 라이트 모드) */
+.btn-cream {
+  background: var(--green);
+  color: #FFFFFF;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-cream:hover {
+  background: var(--green-light);
+  transform: translateY(-1px);
+}
+
+/* 레거시 호환 (기존 btn-gold → btn-green으로 점진 교체) */
+.btn-gold {
+  background: var(--green);
+  color: var(--cream);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-gold:hover {
+  background: var(--green-light);
+  transform: translateY(-1px);
+}
+
+/* 카드 */
+.card-luxury {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+/* 입력 필드 — 다크 */
+.input-luxury {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+.input-luxury:focus {
+  border-color: var(--green-light);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(45,74,62,0.25);
+}
+.input-luxury::placeholder { color: var(--text-muted); }
+.input-luxury option { background: var(--bg-card); color: var(--text-primary); }
+
+/* 입력 필드 — 라이트 (고객 페이지) */
+.input-light {
+  background: #FFFFFF;
+  border: 1.5px solid rgba(28,28,28,0.12);
+  color: var(--text-dark);
+  transition: border-color 0.2s;
+}
+.input-light:focus {
+  border-color: var(--green);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(45,74,62,0.08);
+}
+.input-light::placeholder { color: rgba(28,28,28,0.35); }
+
+/* 스크롤바 */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-darker); }
+::-webkit-scrollbar-thumb { background: rgba(45,74,62,0.5); border-radius: 3px; }
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .text-green { color: var(--green); }
+  .text-cream { color: var(--cream); }
+  .bg-card-luxury { background: var(--bg-card); }
+  .border-green { border-color: var(--border-green); }
+}

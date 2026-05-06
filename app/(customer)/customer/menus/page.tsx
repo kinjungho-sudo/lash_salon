@@ -1,9 +1,10 @@
-﻿import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 
 export default async function CustomerMenusPage() {
   const supabase = createClient()
 
+  // 관리자 프로필에서 활성 메뉴 조회
   const { data: ownerProfile } = await supabase
     .from('lash_salon_owner_profiles')
     .select('id')
@@ -28,33 +29,40 @@ export default async function CustomerMenusPage() {
   })
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">시술 메뉴</h1>
+    <div>
+      <div className="mb-8">
+        <p className="text-xs uppercase tracking-wider mb-1" style={{ color: 'rgba(28,28,28,0.4)' }}>MENU</p>
+        <h1 className="text-2xl font-bold" style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C' }}>시술 메뉴</h1>
+      </div>
 
-      {menus.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-lg p-8 text-center">
-          <p className="text-sm text-gray-400">등록된 메뉴가 없습니다.</p>
+      {!menus || menus.length === 0 ? (
+        <div className="rounded-2xl p-10 text-center" style={{ background: '#FFFFFF', border: '1.5px solid rgba(28,28,28,0.06)' }}>
+          <p className="text-sm" style={{ color: 'rgba(28,28,28,0.4)' }}>등록된 메뉴가 없습니다.</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-4">
           {menus.map(m => (
-            <div key={m.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: m.color_tag ?? '#6b7280' }} />
-                <div>
-                  <p className="text-sm font-semibold text-gray-900">{m.name}</p>
-                  <p className="text-xs text-gray-400">약 {m.duration_min}분</p>
+            <div key={m.id} className="rounded-2xl p-6" style={{ background: '#FFFFFF', border: '1.5px solid rgba(28,28,28,0.07)' }}>
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 rounded-full" style={{ background: m.color_tag ?? '#2D4A3E' }} />
+                  <h2 className="text-base font-bold" style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C' }}>{m.name}</h2>
+                </div>
+                <div className="text-right">
+                  <p className="text-base font-semibold" style={{ color: '#2D4A3E' }}>{m.price.toLocaleString()}원</p>
+                  <p className="text-xs" style={{ color: 'rgba(28,28,28,0.4)' }}>약 {m.duration_min}분</p>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-900">{m.price.toLocaleString()}원</p>
             </div>
           ))}
         </div>
       )}
 
-      <Link href="/customer/booking" className="block w-full text-center text-sm font-medium text-white bg-gray-900 px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors">
-        예약 신청하기
-      </Link>
+      <div className="mt-8">
+        <Link href="/customer/booking" className="w-full h-12 rounded-xl text-sm font-semibold btn-cream flex items-center justify-center">
+          예약 신청하기
+        </Link>
+      </div>
     </div>
   )
 }
