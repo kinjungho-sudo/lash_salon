@@ -242,9 +242,7 @@ export default function TrendsSharePage() {
                     <div className="flex items-start gap-3">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#A8C5B8' }} />
                       <p className="text-sm leading-relaxed" style={{ color: 'rgba(245,240,232,0.65)' }}>
-                        현재 <span className="font-semibold" style={{ color: '#F5F0E8' }}>&lsquo;{topKeyword.keyword}&rsquo;</span>이
-                        검색 지수 <span style={{ color: '#A8C5B8' }}>{topKeyword.last_search_volume?.toFixed(1)}</span>로
-                        가장 높은 관심을 받고 있습니다.
+                        {'현재 '}<span className="font-semibold" style={{ color: '#F5F0E8' }}>&lsquo;{topKeyword.keyword}&rsquo;</span>{'이 검색 지수 '}<span style={{ color: '#A8C5B8' }}>{topKeyword.last_search_volume?.toFixed(1)}</span>{'로 가장 높은 관심을 받고 있습니다.'}
                       </p>
                     </div>
                   )}
@@ -255,9 +253,7 @@ export default function TrendsSharePage() {
                     <div key={kw.id} className="flex items-start gap-3">
                       <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: '#A8C5B8' }} />
                       <p className="text-sm leading-relaxed" style={{ color: 'rgba(245,240,232,0.65)' }}>
-                        <span className="font-semibold" style={{ color: '#F5F0E8' }}>&lsquo;{kw.keyword}&rsquo;</span>은
-                        지난 1주 대비{' '}
-                        <span style={{ color: '#A8C5B8' }}>+{getTrend(kw.history)!.toFixed(0)}% 상승</span> 중입니다.
+                        <span className="font-semibold" style={{ color: '#F5F0E8' }}>&lsquo;{kw.keyword}&rsquo;</span>{'은 지난 1주 대비 '}<span style={{ color: '#A8C5B8' }}>{'+' + getTrend(kw.history)!.toFixed(0) + '% 상승'}</span>{' 중입니다.'}
                       </p>
                     </div>
                   ))}
