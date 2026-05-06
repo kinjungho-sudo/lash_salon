@@ -78,18 +78,19 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: V.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+    <div style={{ minHeight: '100vh', background: V.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
       <div style={{
-        width: 'min(900px, 100%)',
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
+        width: '100%', maxWidth: 1000,
+        display: 'grid', gridTemplateColumns: 'minmax(0,5fr) minmax(0,7fr)',
         background: V.bgSoft, border: `1px solid ${V.lineSoft}`,
         boxShadow: '0 24px 80px rgba(26,42,28,0.12)',
       }}>
 
         {/* 왼쪽 — 브랜드 패널 */}
         <aside style={{
-          background: V.ink, color: V.bgSoft, padding: '64px 48px',
+          background: V.ink, color: V.bgSoft, padding: 'clamp(40px,6vw,72px) clamp(32px,4vw,56px)',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+          minHeight: 480,
         }}>
           <div>
             <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.55)', marginBottom: 8 }}>
@@ -98,8 +99,16 @@ export default function OnboardingPage() {
             <div style={{ marginBottom: 24 }}>
               <Image src="/Logo.png" alt="MUTE" width={80} height={28} className="h-6 w-auto object-contain brightness-0 invert opacity-80" />
             </div>
-            <h2 style={{ fontFamily: V.display, fontSize: 52, lineHeight: 1, letterSpacing: '0.02em', margin: '0 0 20px', color: V.bgSoft }}>
-              {googleName ? `반갑습니다,\n${googleName.split(' ')[0]}님.` : '처음\n오셨군요.'}
+            <h2 style={{
+              fontFamily: V.display,
+              fontSize: 'clamp(36px,4vw,56px)',
+              lineHeight: 1.05, letterSpacing: '0.02em',
+              margin: '0 0 20px', color: V.bgSoft,
+              whiteSpace: 'pre-line',
+            }}>
+              {googleName
+                ? `반갑습니다,\n${googleName.split(' ')[0]}님.`
+                : '처음\n오셨군요.'}
             </h2>
             <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.65, color: 'rgba(242,236,221,0.72)', margin: 0 }}>
               &ldquo;한 사람을 위한,<br />단 하나의 디자인.&rdquo;
@@ -115,7 +124,7 @@ export default function OnboardingPage() {
         </aside>
 
         {/* 오른쪽 — 정보 입력 */}
-        <div style={{ padding: '64px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ padding: 'clamp(40px,6vw,72px) clamp(32px,5vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
 
           {/* 헤더 */}
           <div style={{ marginBottom: 36 }}>
