@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Plus, Trash2, RefreshCw, Loader2, AlertCircle } from 'lucide-react'
+import { Plus, Trash2, RefreshCw, Loader2, AlertCircle, Share2, Check } from 'lucide-react'
 
 interface TrendKeyword {
   id: string
@@ -21,6 +21,7 @@ export default function AdminTrendsPage() {
   const [newKeyword, setNewKeyword] = useState('')
   const [adding, setAdding] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
 
   async function fetchKeywords() {
     setLoading(true)
@@ -53,6 +54,13 @@ export default function AdminTrendsPage() {
   async function handleDelete(id: string) {
     await fetch(`/api/trends?id=${id}`, { method: 'DELETE' })
     await fetchKeywords()
+  }
+
+  async function handleCopyShareLink() {
+    const url = `${window.location.origin}/trends/share`
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   async function handleRefresh() {
@@ -94,11 +102,23 @@ export default function AdminTrendsPage() {
             {lastFetched && <span> · 최근 갱신: {new Date(lastFetched).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>}
           </p>
         </div>
-        <button onClick={handleRefresh} disabled={refreshing || keywords.length === 0}
-          className="h-9 px-4 rounded-lg text-sm font-semibold btn-green flex items-center gap-2 disabled:opacity-40">
-          {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-          {refreshing ? '가져오는 중...' : '데이터 새로고침'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleCopyShareLink}
+            className="h-9 px-4 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors"
+            style={{
+              background: copied ? 'rgba(168,197,184,0.15)' : 'rgba(255,255,255,0.05)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: copied ? '#A8C5B8' : 'rgba(245,240,232,0.6)',
+            }}>
+            {copied ? <Check size={13} /> : <Share2 size={13} />}
+            {copied ? '복사됨' : '공유 링크'}
+          </button>
+          <button onClick={handleRefresh} disabled={refreshing || keywords.length === 0}
+            className="h-9 px-4 rounded-lg text-sm font-semibold btn-green flex items-center gap-2 disabled:opacity-40">
+            {refreshing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+            {refreshing ? '가져오는 중...' : '데이터 새로고침'}
+          </button>
+        </div>
       </div>
 
       {error && (
