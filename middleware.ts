@@ -66,15 +66,10 @@ export async function middleware(request: NextRequest) {
 
   // 공개 경로 — 통과
   if (isPublicPath) {
-    // 이미 로그인된 상태에서 /login, /signup 접근 → owner_profiles 확인 후 적절한 홈으로
+    // 이미 로그인된 상태에서 /login, /signup 접근 → 고객 홈으로
     if (user && (pathname === '/login' || pathname === '/signup')) {
-      const { data: ownerProfile } = await supabase
-        .from('lash_salon_owner_profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
       const url = request.nextUrl.clone()
-      url.pathname = ownerProfile ? '/admin' : '/customer'
+      url.pathname = '/customer'
       return NextResponse.redirect(url)
     }
     return supabaseResponse

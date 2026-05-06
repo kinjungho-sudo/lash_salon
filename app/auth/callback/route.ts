@@ -39,51 +39,32 @@ export async function GET(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  // owner_profiles에 이미 레코드가 있는지 확인 (사장님 계정 판별)
-  const { data: existingOwnerProfile } = await serviceSupabase
-    .from('lash_salon_owner_profiles')
-    .select('id')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (existingOwnerProfile) {
-    // 사장님 계정 — 관리자 페이지로
-    return NextResponse.redirect(`${origin}/admin`)
-  }
-
-  // owner_profiles에 없는 경우: 첫 번째 owner(사장님)가 있는지 확인
+  // 살롱 owner 조회 (고객 레코드 생성 시 owner_id 필요)
   const { data: ownerProfile } = await serviceSupabase
     .from('lash_salon_owner_profiles')
     .select('id')
     .limit(1)
     .maybeSingle()
 
-  if (!ownerProfile) {
-    // owner_profiles가 비어있음 = 최초 로그인 사장님 → owner_profiles 생성
-    await serviceSupabase.from('lash_salon_owner_profiles').insert({
-      id: user.id,
-      consent_terms_at: new Date().toISOString(),
-      consent_marketing: false,
-    })
-    return NextResponse.redirect(`${origin}/admin`)
+  if (ownerProfile) {
+    // 고객 레코드 자동 생성
+    const { data: existingCustomer } = await serviceSupabase
+      .from('lash_salon_customers')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!existingCustomer) {
+      const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
+      await serviceSupabase.from('lash_salon_customers').insert({
+        owner_id: ownerProfile.id,
+        user_id: user.id,
+        name: userName,
+        phone: user.user_metadata?.phone ?? null,
+      })
+    }
   }
 
-  // 일반 고객 — customers 레코드 자동 생성
-  const { data: existingCustomer } = await serviceSupabase
-    .from('lash_salon_customers')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (!existingCustomer) {
-    const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
-    await serviceSupabase.from('lash_salon_customers').insert({
-      owner_id: ownerProfile.id,
-      user_id: user.id,
-      name: userName,
-      phone: user.user_metadata?.phone ?? null,
-    })
-  }
-
+  // 로그인은 항상 고객 페이지로 — 관리자는 /admin 직접 접근
   return NextResponse.redirect(`${origin}/customer`)
 }
