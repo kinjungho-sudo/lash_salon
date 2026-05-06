@@ -27,8 +27,8 @@ interface DistrictSummary {
 type PeriodFilter = '1' | '3' | 'all'
 
 export default function AdminMapPage() {
-  useKakaoLoader({
-    appkey: process.env.NEXT_PUBLIC_KAKAO_MAP_JAVASCRIPT_KEY!,
+  const [kakaoLoading, kakaoError] = useKakaoLoader({
+    appkey: process.env.NEXT_PUBLIC_KAKAO_MAP_JAVASCRIPT_KEY ?? '',
     libraries: ['clusterer'],
   })
   const [pins, setPins] = useState<CustomerPin[]>([])
@@ -141,19 +141,28 @@ export default function AdminMapPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* 지도 */}
         <div className="lg:col-span-2 rounded-xl overflow-hidden relative" style={{ height: '520px', border: '1px solid rgba(255,255,255,0.06)' }}>
-          {loading && (
+          {kakaoError && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3" style={{ background: '#1A1A1A' }}>
+              <AlertCircle size={28} style={{ color: '#F87171' }} />
+              <p className="text-sm font-medium" style={{ color: '#F87171' }}>카카오 지도를 불러올 수 없습니다</p>
+              <p className="text-xs text-center max-w-xs leading-relaxed" style={{ color: 'rgba(245,240,232,0.4)' }}>
+                카카오 개발자 콘솔에서 이 도메인을 Web 플랫폼에 등록해야 합니다.
+              </p>
+            </div>
+          )}
+          {(loading || kakaoLoading) && !kakaoError && (
             <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ background: '#1A1A1A' }}>
               <p className="text-sm" style={{ color: 'rgba(245,240,232,0.3)' }}>지도 불러오는 중...</p>
             </div>
           )}
-          {!loading && pins.length === 0 && !error && (
+          {!loading && !kakaoLoading && !kakaoError && pins.length === 0 && !error && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2" style={{ background: '#1A1A1A' }}>
               <MapPin size={28} style={{ color: 'rgba(245,240,232,0.2)' }} />
               <p className="text-sm" style={{ color: 'rgba(245,240,232,0.3)' }}>좌표가 등록된 고객이 없습니다.</p>
               <p className="text-xs" style={{ color: 'rgba(245,240,232,0.2)' }}>고객 등록 시 동네 주소를 입력하면 자동으로 표시됩니다.</p>
             </div>
           )}
-          {!loading && pins.length > 0 && (
+          {!loading && !kakaoLoading && !kakaoError && pins.length > 0 && (
             <Map
               center={{ lat: 37.5665, lng: 126.9780 }}
               style={{ width: '100%', height: '100%' }}
