@@ -31,6 +31,13 @@ const V = {
 // NAV
 // ────────────────────────────────────────────────────────────────────
 function Nav({ onLogin }: { onLogin: () => void }) {
+  const [loggedIn, setLoggedIn] = useState(false)
+  const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => { setLoggedIn(!!data.user) })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 50,
@@ -74,17 +81,31 @@ function Nav({ onLogin }: { onLogin: () => void }) {
               }}
             >{label}</a>
           ))}
-          <button
-            onClick={onLogin}
-            aria-label="login"
-            style={{
-              width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              border: `1px solid ${V.line}`, background: 'transparent', color: V.ink, borderRadius: '50%',
-              cursor: 'pointer', transition: 'all 200ms ease',
-            }}
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
-          </button>
+          {loggedIn ? (
+            <Link
+              href="/customer"
+              aria-label="mypage"
+              style={{
+                width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                border: `1px solid ${V.ink}`, background: V.ink, color: V.bgSoft, borderRadius: '50%',
+                cursor: 'pointer', transition: 'all 200ms ease', textDecoration: 'none',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
+            </Link>
+          ) : (
+            <button
+              onClick={onLogin}
+              aria-label="login"
+              style={{
+                width: 36, height: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                border: `1px solid ${V.line}`, background: 'transparent', color: V.ink, borderRadius: '50%',
+                cursor: 'pointer', transition: 'all 200ms ease',
+              }}
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>
@@ -800,13 +821,22 @@ function Footer() {
 // LOGIN MODAL
 // ────────────────────────────────────────────────────────────────────
 function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const [tab, setTab] = useState<'login' | 'signup'>('login')
+  const [loading, setLoading] = useState(false)
+  const supabase = createClient()
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
     return () => { document.body.style.overflow = '' }
   }, [open])
+
+  async function handleGoogleLogin() {
+    setLoading(true)
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback` },
+    })
+  }
 
   return (
     <div
@@ -822,128 +852,95 @@ function LoginModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: 'min(960px, 92vw)', maxHeight: '90vh', overflow: 'auto',
-          background: V.bgSoft, display: 'grid', gridTemplateColumns: '1fr 1fr',
-          position: 'relative', border: `1px solid ${V.lineSoft}`,
+          width: 'min(880px, 92vw)',
+          background: '#F2ECDD', display: 'grid', gridTemplateColumns: '1fr 1fr',
+          position: 'relative', border: '1px solid #D9CFB8',
+          boxShadow: '0 24px 80px rgba(42,58,44,0.18)',
           transform: open ? 'translateY(0)' : 'translateY(20px)',
           transition: 'transform 300ms ease',
         }}
       >
-        {/* 닫기 */}
+        {/* 닫기 버튼 */}
         <button
           onClick={onClose}
           style={{
             position: 'absolute', top: 20, right: 20,
             width: 36, height: 36, borderRadius: '50%',
             border: '1px solid rgba(242,236,221,0.3)',
-            background: 'transparent', color: V.bgSoft,
+            background: 'transparent', color: '#F2ECDD',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 2, cursor: 'pointer',
           }}
         >
           <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
         </button>
-        {/* 왼쪽 패널 */}
+
+        {/* 왼쪽 — 다크 패널 */}
         <aside style={{
-          background: V.ink, color: V.bgSoft, padding: '64px 48px',
+          background: '#1A2A1C', color: '#F2ECDD', padding: '64px 48px',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-          position: 'relative', overflow: 'hidden',
         }}>
           <div>
-            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.6)' }}>Members · MUTE</div>
-            <h3 style={{ fontFamily: V.display, fontSize: 56, lineHeight: 1, letterSpacing: '0.02em', margin: '24px 0 18px' }}>Welcome<br />back.</h3>
-            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.7, color: 'rgba(242,236,221,0.9)', margin: 0 }}>
-              &ldquo;한 사람의 시선을 기억하는 일, 그것이 우리의 시작입니다.&rdquo;
+            <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.32em', textTransform: 'uppercase', color: 'rgba(242,236,221,0.55)', marginBottom: 4 }}>
+              Members · MUTE
+            </div>
+            <h3 style={{ fontFamily: V.display, fontSize: 52, lineHeight: 1, letterSpacing: '0.02em', margin: '20px 0 18px', color: '#F2ECDD' }}>
+              Welcome<br />back.
+            </h3>
+            <p style={{ fontFamily: V.serifItalic, fontStyle: 'italic', fontSize: 16, lineHeight: 1.65, color: 'rgba(242,236,221,0.72)', margin: 0 }}>
+              &ldquo;한 사람의 시선을 기억하는 일,<br />그것이 우리의 시작입니다.&rdquo;
             </p>
           </div>
-          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: 'rgba(242,236,221,0.5)', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: 'rgba(242,236,221,0.45)', textTransform: 'uppercase' }}>
             Member benefits · 시술 5% 적립 · 우선 예약
           </div>
         </aside>
-        {/* 오른쪽 폼 */}
-        <div style={{ padding: '64px 56px' }}>
-          <div style={{ display: 'flex', gap: 32, borderBottom: `1px solid ${V.line}`, marginBottom: 36 }}>
-            {(['login', 'signup'] as const).map(t => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em',
-                  color: tab === t ? V.ink : V.ink3,
-                  textTransform: 'uppercase', background: 'none', border: 'none',
-                  borderBottom: tab === t ? `1px solid ${V.ink}` : '1px solid transparent',
-                  padding: '0 0 14px', marginBottom: -1, cursor: 'pointer',
-                }}
-              >{t === 'login' ? '로그인' : '회원가입'}</button>
-            ))}
+
+        {/* 오른쪽 — 로그인 */}
+        <div style={{ padding: '64px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 32, borderBottom: '1px solid #C9BFA6', marginBottom: 36 }}>
+            <span style={{
+              fontFamily: V.sans, fontSize: 11, letterSpacing: '0.3em', color: '#1A2A1C',
+              textTransform: 'uppercase', paddingBottom: 14,
+              borderBottom: '1px solid #1A2A1C', marginBottom: -1,
+            }}>로그인 · 회원가입</span>
           </div>
 
-          {tab === 'login' ? (
-            <div>
-              {[
-                { label: 'Email', type: 'email', defaultValue: '' },
-                { label: 'Password', type: 'password', defaultValue: '' },
-              ].map(f => (
-                <div key={f.label} style={{ display: 'grid', gap: 8, marginBottom: 22 }}>
-                  <label style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{f.label}</label>
-                  <input
-                    type={f.type}
-                    style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, background: 'transparent', border: 'none', borderBottom: `1px solid ${V.line}`, padding: '10px 0', outline: 'none' }}
-                  />
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: V.sans, fontSize: 11, color: V.ink3, letterSpacing: '0.1em', marginBottom: 28 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" defaultChecked /> 자동 로그인
-                </label>
-                <Link href="/login" style={{ color: V.ink3, borderBottom: `1px solid ${V.ink3}`, textDecoration: 'none' }}>비밀번호 찾기</Link>
-              </div>
-              <Link href="/login" className="mute-btn" style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', textDecoration: 'none' }}>
-                로그인 <span className="material-symbols-outlined">arrow_forward</span>
-              </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, margin: '32px 0 20px', color: V.ink3, fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase' }}>
-                <span style={{ flex: 1, height: 1, background: V.line }} />
-                <span>or</span>
-                <span style={{ flex: 1, height: 1, background: V.line }} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-                {['Kakao', 'Naver', 'Apple'].map(s => (
-                  <button
-                    key={s}
-                    style={{
-                      padding: 14, border: `1px solid ${V.line}`, background: 'transparent',
-                      fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink,
-                      textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', transition: 'all 200ms ease',
-                    }}
-                  >{s}</button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div>
-              {[
-                { label: 'Name · 성함', type: 'text' },
-                { label: 'Email', type: 'email' },
-                { label: 'Phone · 연락처', type: 'tel' },
-                { label: 'Password', type: 'password' },
-              ].map(f => (
-                <div key={f.label} style={{ display: 'grid', gap: 8, marginBottom: 22 }}>
-                  <label style={{ fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', color: V.ink3, textTransform: 'uppercase' }}>{f.label}</label>
-                  <input
-                    type={f.type}
-                    style={{ fontFamily: V.serif, fontSize: 17, color: V.ink, background: 'transparent', border: 'none', borderBottom: `1px solid ${V.line}`, padding: '10px 0', outline: 'none' }}
-                  />
-                </div>
-              ))}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28, fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
-                <input type="checkbox" /> 이용약관 및 개인정보 처리방침 동의
-              </div>
-              <Link href="/signup" className="mute-btn" style={{ width: '100%', justifyContent: 'center', display: 'inline-flex', textDecoration: 'none' }}>
-                가입하기 <span className="material-symbols-outlined">arrow_forward</span>
-              </Link>
-            </div>
-          )}
+          <p style={{ fontFamily: V.serif, fontSize: 16, color: '#4A5A44', margin: '0 0 36px', lineHeight: 1.6 }}>
+            Google 계정으로 간편하게 로그인하거나 가입하세요.
+          </p>
+
+          {/* Google 로그인 버튼 */}
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            style={{
+              width: '100%', padding: '16px',
+              border: '1px solid #1A2A1C', background: '#1A2A1C',
+              fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: '#F2ECDD',
+              textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14,
+              cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1,
+              transition: 'all 200ms ease',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18">
+              <path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+              <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+              <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+              <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+            </svg>
+            {loading ? '이동 중...' : 'Google로 계속하기'}
+          </button>
+
+          <p style={{ fontFamily: V.sans, fontSize: 11, color: '#4A5A44', marginTop: 20, lineHeight: 1.6, opacity: 0.7 }}>
+            처음 방문이라면 자동으로 회원가입이 완료됩니다.
+          </p>
+
+          <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #D9CFB8', display: 'flex', justifyContent: 'flex-end' }}>
+            <button onClick={onClose} style={{ fontFamily: V.sans, fontSize: 11, color: '#4A5A44', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '0.1em' }}>
+              닫기
+            </button>
+          </div>
         </div>
       </div>
     </div>
