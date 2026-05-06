@@ -36,24 +36,16 @@ export default async function CustomerHomePage() {
     ?? '고객'
 
   return (
-    <div>
-      {/* 인사 헤더 */}
-      <div className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(28,28,28,0.08)' }}>
-        <p className="text-xs font-semibold tracking-[0.2em] uppercase mb-2" style={{ color: '#2D4A3E' }}>
-          MUTE EYELASH SALON
-        </p>
-        <h1 className="text-2xl font-bold leading-tight" style={{ fontFamily: 'var(--font-playfair,serif)', color: '#1C1C1C' }}>
-          안녕하세요,<br />{displayName}님
-        </h1>
+    <div className="space-y-6">
+      <div>
+        <p className="text-xs text-gray-400 mb-1">MUTE EYELASH SALON</p>
+        <h1 className="text-xl font-bold text-gray-900">안녕하세요, {displayName}님</h1>
       </div>
 
-      {/* 예약 상태 */}
-      <div className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(28,28,28,0.4)' }}>
-          다가오는 예약
-        </p>
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">다가오는 예약</p>
         {upcomingBookings && upcomingBookings.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {(upcomingBookings as any[]).map(b => {
               const startDt = new Date(b.start_at)
@@ -63,53 +55,38 @@ export default async function CustomerHomePage() {
               const hh = pad(startDt.getHours())
               const mm = pad(startDt.getMinutes())
               return (
-                <div key={b.id} className="rounded-2xl p-5 flex items-center gap-4"
-                  style={{ background: '#FFFFFF', border: '1.5px solid rgba(28,28,28,0.08)', boxShadow: '0 2px 12px rgba(28,28,28,0.04)' }}>
-                  <div className="w-1.5 self-stretch rounded-full flex-shrink-0"
-                    style={{ background: b.menu?.color_tag ?? '#2D4A3E', minHeight: '44px' }} />
+                <div key={b.id} className="bg-white border border-gray-200 rounded-lg p-4 flex items-center gap-3">
+                  <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: b.menu?.color_tag ?? '#6b7280' }} />
                   <div className="flex-1">
-                    <p className="text-sm font-semibold mb-1" style={{ color: '#1C1C1C' }}>{b.menu?.name}</p>
-                    <p className="text-xs" style={{ color: 'rgba(28,28,28,0.5)' }}>
-                      {month} {day} ({weekday}) · {hh}:{mm}
-                    </p>
+                    <p className="text-sm font-semibold text-gray-900">{b.menu?.name}</p>
+                    <p className="text-xs text-gray-400">{month} {day} ({weekday}) · {hh}:{mm}</p>
                   </div>
-                  <div className="flex-shrink-0 text-xs px-2.5 py-1 rounded-full font-medium"
-                    style={{ background: 'rgba(45,74,62,0.08)', color: '#2D4A3E' }}>
-                    확정
-                  </div>
+                  <span className="text-xs px-2 py-0.5 bg-green-50 text-green-700 rounded-full font-medium">확정</span>
                 </div>
               )
             })}
           </div>
         ) : (
-          <div className="rounded-2xl p-7 text-center" style={{ background: '#FFFFFF', border: '1.5px solid rgba(28,28,28,0.06)' }}>
-            <p className="text-sm mb-1" style={{ color: 'rgba(28,28,28,0.4)' }}>예약된 시술이 없습니다</p>
-            <p className="text-xs mb-4" style={{ color: 'rgba(28,28,28,0.3)' }}>원하시는 날짜와 메뉴를 선택해 예약해 보세요</p>
-            <Link href="/customer/booking"
-              className="inline-flex items-center h-9 px-6 rounded-xl text-sm font-semibold btn-cream">
+          <div className="bg-white border border-gray-200 rounded-lg p-6 text-center">
+            <p className="text-sm text-gray-500 mb-3">예약된 시술이 없습니다.</p>
+            <Link href="/customer/booking" className="inline-block text-sm font-medium text-white bg-gray-900 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors">
               예약하기
             </Link>
           </div>
         )}
       </div>
 
-      {/* 빠른 메뉴 */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'rgba(28,28,28,0.4)' }}>
-          메뉴
-        </p>
-        <div className="grid grid-cols-2 gap-3">
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">메뉴</p>
+        <div className="grid grid-cols-2 gap-2">
           {[
-            { href: '/customer/booking', label: '예약 신청', desc: '날짜·메뉴 선택', icon: '📅' },
-            { href: '/customer/menus', label: '시술 메뉴', desc: '클래식·볼륨·하이브리드', icon: '✨' },
-            { href: '/customer/profile', label: '내 정보', desc: '이름·연락처 수정', icon: '👤' },
+            { href: '/customer/booking', label: '예약 신청', desc: '날짜·메뉴 선택' },
+            { href: '/customer/menus', label: '시술 메뉴', desc: '클래식·볼륨·하이브리드' },
+            { href: '/customer/profile', label: '내 정보', desc: '이름·연락처 수정' },
           ].map(item => (
-            <Link key={item.href} href={item.href}
-              className="rounded-2xl p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
-              style={{ background: '#FFFFFF', border: '1.5px solid rgba(28,28,28,0.07)' }}>
-              <p className="text-lg mb-1.5">{item.icon}</p>
-              <p className="text-sm font-semibold mb-0.5" style={{ color: '#1C1C1C' }}>{item.label}</p>
-              <p className="text-xs" style={{ color: 'rgba(28,28,28,0.4)' }}>{item.desc}</p>
+            <Link key={item.href} href={item.href} className="bg-white border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+              <p className="text-sm font-semibold text-gray-900">{item.label}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
             </Link>
           ))}
         </div>
