@@ -42,49 +42,31 @@ function BookingForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // 선택된 날짜의 예약된 슬롯 (start_at 시간 문자열 "HH:MM")
-  const [bookedSlots, setBookedSlots] = useState<string[]>([])
-  const [slotsLoading, setSlotsLoading] = useState(false)
-  // 현재 보이는 달의 날짜별 예약 수 { "2024-05-10": 3 }
-  const [monthBookedDates, setMonthBookedDates] = useState<Record<string, number>>({})
+  // 날짜별 예약된 시간 슬롯 맵 { "2024-05-10": ["11:00", "14:00"] }
+  const [monthBookedMap, setMonthBookedMap] = useState<Record<string, string[]>>({})
+  const [monthLoading, setMonthLoading] = useState(false)
 
-  // 월 변경 시 해당 월 예약 현황 로드 (달력 Full 표시용)
+  // 월 변경 시 해당 월 전체 예약 현황 미리 로드 — 날짜 클릭 없이도 슬롯 표시
   useEffect(() => {
     const yr = view.y, mo = view.m + 1
+    setMonthLoading(true)
     fetch(`/api/bookings?date=month&year=${yr}&month=${mo}`)
       .then(r => r.json())
       .then((data: { start_at: string }[]) => {
         if (!Array.isArray(data)) return
-        const map: Record<string, number> = {}
+        const map: Record<string, string[]> = {}
         data.forEach(b => {
           const d = new Date(b.start_at)
           const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-          map[key] = (map[key] ?? 0) + 1
+          const timeStr = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+          if (!map[key]) map[key] = []
+          map[key].push(timeStr)
         })
-        setMonthBookedDates(map)
+        setMonthBookedMap(map)
       })
       .catch(() => {})
+      .finally(() => setMonthLoading(false))
   }, [view])
-
-  // 날짜 선택 시 해당 날짜 예약 현황 로드
-  useEffect(() => {
-    if (!picked) { setBookedSlots([]); return }
-    const dateStr = `${picked.y}-${pad(picked.m + 1)}-${pad(picked.d)}`
-    setSlotsLoading(true)
-    fetch(`/api/bookings?date=${dateStr}`)
-      .then(r => r.json())
-      .then((data: { start_at: string }[]) => {
-        if (!Array.isArray(data)) return
-        // "HH:MM" 형식으로 추출
-        const slots = data.map(b => {
-          const d = new Date(b.start_at)
-          return `${pad(d.getHours())}:${pad(d.getMinutes())}`
-        })
-        setBookedSlots(slots)
-      })
-      .catch(() => {})
-      .finally(() => setSlotsLoading(false))
-  }, [picked])
 
   useEffect(() => {
     fetch('/api/menus')
@@ -122,9 +104,14 @@ function BookingForm() {
     return true
   }
 
+  // 선택된 날짜의 예약된 슬롯 — API 재호출 없이 월 데이터에서 바로 계산
+  const bookedSlots: string[] = picked
+    ? monthBookedMap[`${picked.y}-${pad(picked.m + 1)}-${pad(picked.d)}`] ?? []
+    : []
+
   const isFullyBooked = (d: number): boolean => {
     const dateStr = `${view.y}-${pad(view.m + 1)}-${pad(d)}`
-    return (monthBookedDates[dateStr] ?? 0) >= TIME_SLOTS.length
+    return (monthBookedMap[dateStr]?.length ?? 0) >= TIME_SLOTS.length
   }
 
   const isToday = (d: number) => d === today.d && view.m === today.m && view.y === today.y
@@ -289,7 +276,7 @@ function BookingForm() {
 
         {/* 시간 슬롯 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 28 }}>
-          {slotsLoading && picked ? (
+          {monthLoading && picked ? (
             <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: V.sans, fontSize: 11, letterSpacing: '0.25em', color: V.ink3, textTransform: 'uppercase', padding: '20px 0' }}>
               Loading…
             </div>
