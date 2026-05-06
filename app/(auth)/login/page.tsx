@@ -103,29 +103,7 @@ function LoginForm() {
             {loading ? '로그인 중...' : 'Google로 로그인'}
           </button>
 
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 14,
-            margin: '32px 0 20px', color: V.ink3,
-            fontFamily: V.sans, fontSize: 10, letterSpacing: '0.3em', textTransform: 'uppercase',
-          }}>
-            <span style={{ flex: 1, height: 1, background: V.line }}/>
-            <span>or</span>
-            <span style={{ flex: 1, height: 1, background: V.line }}/>
-          </div>
-
-          {/* 소셜 버튼 영역 — 현재 Google만 지원 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10 }}>
-            <button disabled style={{
-              padding: '14px', border: `1px solid ${V.lineSoft}`, background: 'transparent',
-              fontFamily: V.sans, fontSize: 10, letterSpacing: '0.25em', color: V.ink3,
-              textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              opacity: 0.4, cursor: 'not-allowed',
-            }}>
-              Kakao · Naver 로그인 준비 중
-            </button>
-          </div>
-
-          <div style={{ marginTop: 36, paddingTop: 28, borderTop: `1px solid ${V.lineSoft}`, display: 'flex', justifyContent: 'space-between', fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
+          <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px solid ${V.lineSoft}`, display: 'flex', justifyContent: 'space-between', fontFamily: V.sans, fontSize: 11, color: V.ink3 }}>
             <Link href="/signup" style={{ color: V.ink, borderBottom: `1px solid ${V.ink}`, textDecoration: 'none', letterSpacing: '0.1em', paddingBottom: 2 }}>회원가입</Link>
             <Link href="/" style={{ color: V.ink3, textDecoration: 'none', letterSpacing: '0.1em' }}>← 홈으로</Link>
           </div>

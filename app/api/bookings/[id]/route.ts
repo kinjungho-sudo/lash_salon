@@ -12,15 +12,41 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   const body = await request.json()
   const { status, menu_id, start_at, end_at } = body
 
-  // 본인 예약인지 확인
-  const { data: existing } = await supabase
+  // 관리자(owner)인지 확인
+  const { data: ownerProfile } = await serviceSupabase
+    .from('lash_salon_owner_profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  // 예약 조회: 관리자는 owner_id로, 고객은 customer → user_id로 연결하여 접근 허용
+  const { data: existing } = await serviceSupabase
     .from('lash_salon_bookings')
     .select('id, google_event_id, owner_id, status')
     .eq('id', params.id)
-    .eq('owner_id', user.id)
     .single()
 
   if (!existing) return NextResponse.json({ error: '예약을 찾을 수 없습니다.' }, { status: 404 })
+
+  // 관리자가 아니면 본인 예약만 접근 가능 (customer_id 검증)
+  if (!ownerProfile) {
+    const { data: customer } = await serviceSupabase
+      .from('lash_salon_customers')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!customer) return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 })
+
+    const { data: bookingCheck } = await serviceSupabase
+      .from('lash_salon_bookings')
+      .select('id')
+      .eq('id', params.id)
+      .eq('customer_id', customer.id)
+      .maybeSingle()
+
+    if (!bookingCheck) return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 })
+  }
 
   // 시간/메뉴 수정 요청
   if (start_at || end_at || menu_id) {
@@ -52,10 +78,10 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
   // 취소 시 GCal 이벤트 삭제
   if (status === 'cancelled' && existing.google_event_id) {
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceSupabase
       .from('lash_salon_owner_profiles')
       .select('gcal_access_token, gcal_refresh_token, gcal_token_expires_at, google_calendar_id')
-      .eq('id', user.id)
+      .eq('id', existing.owner_id)
       .single()
 
     if (profile?.gcal_access_token && profile?.gcal_refresh_token && profile?.google_calendar_id) {
@@ -91,20 +117,28 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: booking } = await supabase
+  // 관리자 확인
+  const { data: ownerProfile } = await serviceSupabase
+    .from('lash_salon_owner_profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (!ownerProfile) return NextResponse.json({ error: '접근 권한이 없습니다.' }, { status: 403 })
+
+  const { data: booking } = await serviceSupabase
     .from('lash_salon_bookings')
     .select('id, google_event_id')
     .eq('id', params.id)
-    .eq('owner_id', user.id)
     .single()
 
   if (!booking) return NextResponse.json({ error: '예약을 찾을 수 없습니다.' }, { status: 404 })
 
   if (booking.google_event_id) {
-    const { data: profile } = await supabase
+    const { data: profile } = await serviceSupabase
       .from('lash_salon_owner_profiles')
       .select('gcal_access_token, gcal_refresh_token, gcal_token_expires_at, google_calendar_id')
-      .eq('id', user.id)
+      .eq('id', ownerProfile.id)
       .single()
 
     if (profile?.gcal_access_token && profile?.gcal_refresh_token && profile?.google_calendar_id) {

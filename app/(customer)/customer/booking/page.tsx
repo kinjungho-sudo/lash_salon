@@ -42,6 +42,49 @@ function BookingForm() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // 선택된 날짜의 예약된 슬롯 (start_at 시간 문자열 "HH:MM")
+  const [bookedSlots, setBookedSlots] = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
+  // 현재 보이는 달의 날짜별 예약 수 { "2024-05-10": 3 }
+  const [monthBookedDates, setMonthBookedDates] = useState<Record<string, number>>({})
+
+  // 월 변경 시 해당 월 예약 현황 로드 (달력 Full 표시용)
+  useEffect(() => {
+    const yr = view.y, mo = view.m + 1
+    fetch(`/api/bookings?date=month&year=${yr}&month=${mo}`)
+      .then(r => r.json())
+      .then((data: { start_at: string }[]) => {
+        if (!Array.isArray(data)) return
+        const map: Record<string, number> = {}
+        data.forEach(b => {
+          const d = new Date(b.start_at)
+          const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+          map[key] = (map[key] ?? 0) + 1
+        })
+        setMonthBookedDates(map)
+      })
+      .catch(() => {})
+  }, [view])
+
+  // 날짜 선택 시 해당 날짜 예약 현황 로드
+  useEffect(() => {
+    if (!picked) { setBookedSlots([]); return }
+    const dateStr = `${picked.y}-${pad(picked.m + 1)}-${pad(picked.d)}`
+    setSlotsLoading(true)
+    fetch(`/api/bookings?date=${dateStr}`)
+      .then(r => r.json())
+      .then((data: { start_at: string }[]) => {
+        if (!Array.isArray(data)) return
+        // "HH:MM" 형식으로 추출
+        const slots = data.map(b => {
+          const d = new Date(b.start_at)
+          return `${pad(d.getHours())}:${pad(d.getMinutes())}`
+        })
+        setBookedSlots(slots)
+      })
+      .catch(() => {})
+      .finally(() => setSlotsLoading(false))
+  }, [picked])
 
   useEffect(() => {
     fetch('/api/menus')
@@ -77,6 +120,11 @@ function BookingForm() {
     if (dt < new Date(today.y, today.m, today.d)) return false
     if (dt.getDay() === 0) return false
     return true
+  }
+
+  const isFullyBooked = (d: number): boolean => {
+    const dateStr = `${view.y}-${pad(view.m + 1)}-${pad(d)}`
+    return (monthBookedDates[dateStr] ?? 0) >= TIME_SLOTS.length
   }
 
   const isToday = (d: number) => d === today.d && view.m === today.m && view.y === today.y
@@ -121,19 +169,23 @@ function BookingForm() {
     }
   }
 
-  const dayBtnStyle = (d: number): React.CSSProperties => ({
-    aspectRatio: '1',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontFamily: V.display, fontSize: 18,
-    color: isPicked(d) ? V.bgSoft : isToday(d) ? V.gold : !isAvailable(d) ? V.ink3 : V.ink,
-    border: isPicked(d) ? `1px solid ${V.ink}` : '1px solid transparent',
-    borderRadius: '50%',
-    background: isPicked(d) ? V.ink : 'transparent',
-    opacity: !isAvailable(d) ? 0.3 : 1,
-    cursor: isAvailable(d) ? 'pointer' : 'not-allowed',
-    position: 'relative',
-    transition: 'all 200ms ease',
-  })
+  const dayBtnStyle = (d: number): React.CSSProperties => {
+    const full = isAvailable(d) && isFullyBooked(d)
+    return {
+      aspectRatio: '1',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexDirection: 'column',
+      fontFamily: V.display, fontSize: 18,
+      color: isPicked(d) ? V.bgSoft : full ? V.ink3 : isToday(d) ? V.gold : !isAvailable(d) ? V.ink3 : V.ink,
+      border: isPicked(d) ? `1px solid ${V.ink}` : full ? `1px solid ${V.lineSoft}` : '1px solid transparent',
+      borderRadius: '50%',
+      background: isPicked(d) ? V.ink : full ? V.bgPaper : 'transparent',
+      opacity: !isAvailable(d) ? 0.3 : full ? 0.7 : 1,
+      cursor: isAvailable(d) && !full ? 'pointer' : 'not-allowed',
+      position: 'relative',
+      transition: 'all 200ms ease',
+    }
+  }
 
   if (success) {
     return (
@@ -187,15 +239,19 @@ function BookingForm() {
           ))}
           {days.map((d, i) => {
             if (!d) return <div key={i} />
+            const full = isAvailable(d) && isFullyBooked(d)
             return (
               <button
                 key={i}
-                disabled={!isAvailable(d)}
-                onClick={() => { setPicked({ y: view.y, m: view.m, d }); setSlot(null) }}
+                disabled={!isAvailable(d) || full}
+                onClick={() => { if (isAvailable(d) && !full) { setPicked({ y: view.y, m: view.m, d }); setSlot(null) } }}
                 style={dayBtnStyle(d)}
               >
-                {d}
-                {isAvailable(d) && !isPicked(d) && (
+                <span>{d}</span>
+                {full && !isPicked(d) && (
+                  <span style={{ fontFamily: V.sans, fontSize: 7, letterSpacing: '0.15em', textTransform: 'uppercase', color: V.ink3, lineHeight: 1 }}>Full</span>
+                )}
+                {isAvailable(d) && !full && !isPicked(d) && (
                   <span style={{ position: 'absolute', bottom: 4, width: 3, height: 3, borderRadius: '50%', background: V.gold }} />
                 )}
               </button>
@@ -230,25 +286,46 @@ function BookingForm() {
 
         {/* 시간 슬롯 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 28 }}>
-          {TIME_SLOTS.map(t => {
+          {slotsLoading && picked ? (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', fontFamily: V.sans, fontSize: 11, letterSpacing: '0.25em', color: V.ink3, textTransform: 'uppercase', padding: '20px 0' }}>
+              Loading…
+            </div>
+          ) : TIME_SLOTS.map(t => {
             const selected = slot === t
+            const isBooked = bookedSlots.includes(t)
+            const disabled = !picked || isBooked
+
             return (
               <button
                 key={t}
-                disabled={!picked}
-                onClick={() => setSlot(t)}
+                disabled={disabled}
+                onClick={() => !isBooked && setSlot(t)}
                 style={{
                   padding: '14px 18px',
-                  border: `1px solid ${selected ? V.ink : V.lineSoft}`,
-                  background: selected ? V.ink : 'transparent',
+                  border: isBooked
+                    ? `1px solid ${V.lineSoft}`
+                    : `1px solid ${selected ? V.ink : V.lineSoft}`,
+                  background: isBooked
+                    ? V.bgPaper
+                    : selected ? V.ink : 'transparent',
                   fontFamily: V.sans, fontSize: 13,
-                  color: selected ? V.bgSoft : V.ink,
+                  color: isBooked ? V.ink3 : selected ? V.bgSoft : V.ink,
                   letterSpacing: '0.1em', textAlign: 'center',
-                  opacity: !picked ? 0.3 : 1,
-                  cursor: !picked ? 'not-allowed' : 'pointer',
+                  opacity: !picked ? 0.3 : isBooked ? 0.6 : 1,
+                  cursor: disabled ? 'not-allowed' : 'pointer',
                   transition: 'all 200ms ease',
+                  position: 'relative',
                 }}
-              >{t}</button>
+              >
+                {t}
+                {isBooked && (
+                  <span style={{
+                    display: 'block', fontFamily: V.sans, fontSize: 9,
+                    letterSpacing: '0.2em', textTransform: 'uppercase',
+                    color: V.ink3, marginTop: 3, opacity: 0.8,
+                  }}>예약 완료</span>
+                )}
+              </button>
             )
           })}
         </div>

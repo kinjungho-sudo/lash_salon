@@ -29,7 +29,7 @@ export async function middleware(request: NextRequest) {
 
   const isPublicPath = PUBLIC_PATHS.some(p => pathname === p || (p !== '/' && pathname.startsWith(p)))
 
-  // /admin/* — 관리자 전용
+  // /admin/* — 관리자 전용 (owner_profiles에 레코드 있어야 접근 가능)
   if (pathname.startsWith('/admin')) {
     if (!user) {
       const url = request.nextUrl.clone()
@@ -37,9 +37,14 @@ export async function middleware(request: NextRequest) {
       url.searchParams.set('redirect', pathname)
       return NextResponse.redirect(url)
     }
-    // ADMIN_EMAIL 확인
-    const adminEmail = process.env.ADMIN_EMAIL
-    if (!adminEmail || user.email !== adminEmail) {
+    // owner_profiles에 해당 user가 있는지 확인
+    const { data: ownerProfile } = await supabase
+      .from('lash_salon_owner_profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (!ownerProfile) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       url.searchParams.set('error', 'not_authorized')
@@ -61,11 +66,15 @@ export async function middleware(request: NextRequest) {
 
   // 공개 경로 — 통과
   if (isPublicPath) {
-    // 이미 로그인된 상태에서 /login, /signup 접근 → 적절한 홈으로
+    // 이미 로그인된 상태에서 /login, /signup 접근 → owner_profiles 확인 후 적절한 홈으로
     if (user && (pathname === '/login' || pathname === '/signup')) {
-      const adminEmail = process.env.ADMIN_EMAIL
+      const { data: ownerProfile } = await supabase
+        .from('lash_salon_owner_profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
       const url = request.nextUrl.clone()
-      url.pathname = user.email === adminEmail ? '/admin' : '/customer'
+      url.pathname = ownerProfile ? '/admin' : '/customer'
       return NextResponse.redirect(url)
     }
     return supabaseResponse

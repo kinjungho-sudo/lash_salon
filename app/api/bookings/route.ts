@@ -2,13 +2,66 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { isSlotAvailable, createEvent } from '@/lib/google/calendar'
 
-// GET /api/bookings?year=2024&month=5
+// GET /api/bookings?year=2024&month=5  (관리자용 — 전체 예약)
+// GET /api/bookings?date=2024-05-10    (고객용 — 특정 날짜 예약된 슬롯 조회)
 export async function GET(request: NextRequest) {
   const supabase = createClient()
+  const serviceSupabase = createServiceClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { searchParams } = new URL(request.url)
+  const dateParam = searchParams.get('date')
+
+  // 고객용: 예약 현황 조회 (예약 가능 여부 확인용)
+  if (dateParam) {
+    const { data: ownerProfile } = await serviceSupabase
+      .from('lash_salon_owner_profiles')
+      .select('id')
+      .limit(1)
+      .maybeSingle()
+
+    if (!ownerProfile) return NextResponse.json([])
+
+    // date=month 이면 해당 월 전체 조회
+    if (dateParam === 'month') {
+      const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()))
+      const month = parseInt(searchParams.get('month') ?? String(new Date().getMonth() + 1))
+      const monthStart = `${year}-${String(month).padStart(2,'0')}-01T00:00:00+09:00`
+      const lastDay = new Date(year, month, 0).getDate()
+      const monthEnd = `${year}-${String(month).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}T23:59:59+09:00`
+
+      const { data, error } = await serviceSupabase
+        .from('lash_salon_bookings')
+        .select('start_at')
+        .eq('owner_id', ownerProfile.id)
+        .neq('status', 'cancelled')
+        .gte('start_at', monthStart)
+        .lte('start_at', monthEnd)
+        .order('start_at')
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(data ?? [])
+    }
+
+    // 특정 날짜 조회
+    const dayStart = `${dateParam}T00:00:00+09:00`
+    const dayEnd = `${dateParam}T23:59:59+09:00`
+
+    const { data, error } = await serviceSupabase
+      .from('lash_salon_bookings')
+      .select('start_at, end_at, status')
+      .eq('owner_id', ownerProfile.id)
+      .neq('status', 'cancelled')
+      .gte('start_at', dayStart)
+      .lte('start_at', dayEnd)
+      .order('start_at')
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data ?? [])
+  }
+
+  // 관리자용: 월별 전체 예약 조회
   const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()))
   const month = parseInt(searchParams.get('month') ?? String(new Date().getMonth() + 1))
 
@@ -35,7 +88,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { menu_id, start_at, end_at } = body
+  const { menu_id, start_at, end_at, customer_id: bodyCustomerId } = body
 
   if (!menu_id || !start_at || !end_at) {
     return NextResponse.json({ error: '필수 항목이 누락되었습니다.' }, { status: 400 })
@@ -53,25 +106,30 @@ export async function POST(request: NextRequest) {
 
   const ownerId = ownerProfile.id
 
-  // 고객 레코드 확인 또는 생성 (service role로 RLS 우회)
-  let { data: customerRecord } = await serviceSupabase
-    .from('lash_salon_customers')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  // 관리자가 customer_id를 직접 전달한 경우 (관리자 캘린더에서 예약 생성)
+  let customer_id = bodyCustomerId as string | undefined
 
-  if (!customerRecord) {
-    const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
-    const { data: newCustomer, error: customerError } = await serviceSupabase
+  if (!customer_id) {
+    // 고객이 직접 예약하는 경우 — user.id로 고객 레코드 확인 또는 생성
+    let { data: customerRecord } = await serviceSupabase
       .from('lash_salon_customers')
-      .insert({ owner_id: ownerId, name: userName, user_id: user.id })
       .select('id')
-      .single()
-    if (customerError) return NextResponse.json({ error: '고객 정보를 생성할 수 없습니다.' }, { status: 500 })
-    customerRecord = newCustomer
-  }
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-  const customer_id = customerRecord.id
+    if (!customerRecord) {
+      const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
+      const { data: newCustomer, error: customerError } = await serviceSupabase
+        .from('lash_salon_customers')
+        .insert({ owner_id: ownerId, name: userName, user_id: user.id })
+        .select('id')
+        .single()
+      if (customerError) return NextResponse.json({ error: '고객 정보를 생성할 수 없습니다.' }, { status: 500 })
+      customerRecord = newCustomer
+    }
+
+    customer_id = customerRecord!.id
+  }
 
   // 사장님 프로필 (GCal 토큰) 조회
   const { data: profile } = await serviceSupabase

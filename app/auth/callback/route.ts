@@ -31,7 +31,6 @@ export async function GET(request: NextRequest) {
   }
 
   const user = data.user
-  const adminEmail = process.env.ADMIN_EMAIL
 
   // Service client for privileged operations
   const serviceSupabase = createServiceSupabaseClient(
@@ -40,48 +39,51 @@ export async function GET(request: NextRequest) {
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 
-  if (user.email === adminEmail) {
-    // admin만 owner_profiles 생성
-    const { data: existingProfile } = await supabase
-      .from('lash_salon_owner_profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
+  // owner_profiles에 이미 레코드가 있는지 확인 (사장님 계정 판별)
+  const { data: existingOwnerProfile } = await serviceSupabase
+    .from('lash_salon_owner_profiles')
+    .select('id')
+    .eq('id', user.id)
+    .maybeSingle()
 
-    if (!existingProfile) {
-      await supabase.from('lash_salon_owner_profiles').insert({
-        id: user.id,
-        consent_terms_at: new Date().toISOString(),
-        consent_marketing: false,
-      })
-    }
-  } else {
-    // 일반 고객 — owner_profiles에서 admin의 id를 직접 조회
-    const { data: ownerProfile } = await serviceSupabase
-      .from('lash_salon_owner_profiles')
-      .select('id')
-      .limit(1)
-      .maybeSingle()
-
-    if (ownerProfile) {
-      const { data: existingCustomer } = await serviceSupabase
-        .from('lash_salon_customers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (!existingCustomer) {
-        const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
-        await serviceSupabase.from('lash_salon_customers').insert({
-          owner_id: ownerProfile.id,
-          user_id: user.id,
-          name: userName,
-          phone: user.user_metadata?.phone ?? null,
-        })
-      }
-    }
+  if (existingOwnerProfile) {
+    // 사장님 계정 — 관리자 페이지로
+    return NextResponse.redirect(`${origin}/admin`)
   }
 
-  const dest = user.email === adminEmail ? '/admin' : '/customer'
-  return NextResponse.redirect(`${origin}${dest}`)
+  // owner_profiles에 없는 경우: 첫 번째 owner(사장님)가 있는지 확인
+  const { data: ownerProfile } = await serviceSupabase
+    .from('lash_salon_owner_profiles')
+    .select('id')
+    .limit(1)
+    .maybeSingle()
+
+  if (!ownerProfile) {
+    // owner_profiles가 비어있음 = 최초 로그인 사장님 → owner_profiles 생성
+    await serviceSupabase.from('lash_salon_owner_profiles').insert({
+      id: user.id,
+      consent_terms_at: new Date().toISOString(),
+      consent_marketing: false,
+    })
+    return NextResponse.redirect(`${origin}/admin`)
+  }
+
+  // 일반 고객 — customers 레코드 자동 생성
+  const { data: existingCustomer } = await serviceSupabase
+    .from('lash_salon_customers')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!existingCustomer) {
+    const userName = user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split('@')[0] ?? '고객'
+    await serviceSupabase.from('lash_salon_customers').insert({
+      owner_id: ownerProfile.id,
+      user_id: user.id,
+      name: userName,
+      phone: user.user_metadata?.phone ?? null,
+    })
+  }
+
+  return NextResponse.redirect(`${origin}/customer`)
 }
